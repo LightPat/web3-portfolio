@@ -1,0 +1,8 @@
+This favicon was generated using the following font:
+
+- Font Title: Funnel Display
+- Font Author: Patrick Seeman
+- Font Source: https://fonts.gstatic.com/s/funneldisplay/v2/B50bF7FGv37QNVWgE0ga--4PbZSRJXrOHcLHLoAYmmPXWMVwIZDKFA.ttf
+- Font License: undefined)
+
+Emerald green hex: #50C878
