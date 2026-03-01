@@ -2,8 +2,29 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
+import { useAccount, useReadContract } from 'wagmi';
+import { formatUnits } from 'viem';
+import { DSC_ENGINE_ABI, DSC_ENGINE_ADDRESS } from '../constants/abi';
 
 const Home: NextPage = () => {
+  const { address, isConnected } = useAccount();
+
+  // Fetch Health Factor from your Smart Contract
+  const { data: healthFactorRaw } = useReadContract({
+    abi: DSC_ENGINE_ABI,
+    address: DSC_ENGINE_ADDRESS as `0x${string}`,
+    functionName: 'getHealthFactor',
+    args: [address],
+    query: {
+      enabled: !!address,
+      refetchInterval: 3000, 
+    }
+  });
+
+  const healthFactor = healthFactorRaw 
+    ? parseFloat(formatUnits(healthFactorRaw as bigint, 18)).toFixed(2) 
+    : "0.00";
+
   return (
     <div className={styles.container}>
       <Head>
@@ -15,71 +36,157 @@ const Home: NextPage = () => {
         <link href="/favicon_io/favicon.ico" rel="icon" />
       </Head>
 
-      <main className={styles.main}>
-        <ConnectButton />
+      {/* <main className={styles.main}>
+        <ConnectButton /> */}
 
-        <h1 className={styles.title}>
-          Welcome to <a href="https://www.rainbowkit.com">RainbowKit</a> +{' '}
-          <a href="https://wagmi.sh">wagmi</a> +{' '}
-          <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.tsx</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a className={styles.card} href="https://rainbowkit.com">
-            <h2>RainbowKit Documentation &rarr;</h2>
-            <p>Learn how to customize your wallet connection flow.</p>
-          </a>
-
-          <a className={styles.card} href="https://wagmi.sh">
-            <h2>wagmi Documentation &rarr;</h2>
-            <p>Learn how to interact with Ethereum.</p>
-          </a>
-
-          <a
-            className={styles.card}
-            href="https://github.com/rainbow-me/rainbowkit/tree/main/examples"
-          >
-            <h2>RainbowKit Examples &rarr;</h2>
-            <p>Discover boilerplate example RainbowKit projects.</p>
-          </a>
-
-          <a className={styles.card} href="https://nextjs.org/docs">
-            <h2>Next.js Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a
-            className={styles.card}
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-          >
-            <h2>Next.js Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            className={styles.card}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+      {/* --- HEADER --- */}
+      <header className="max-w-7xl mx-auto flex justify-between items-center mb-8 border-b border-zinc-800 pb-6">
+        <div>
+          <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
+          <p className="text-zinc-500 text-xs uppercase tracking-tighter">Stablecoin Protocol & Risk Analytics</p>
         </div>
+        <ConnectButton showBalance={false} chainStatus="name" />
+      </header>
+      
+      {/* --- MAIN BENTO GRID --- */}
+      <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 auto-rows-min">
+        
+        {/* 1. IDENTITY BOX (Span 4) */}
+        <div className="md:col-span-4 bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Patrick Seeman</h2>
+            <p className="text-indigo-400 font-mono text-sm">Lead Dev & Data Scientist</p>
+            <p className="text-zinc-400 mt-4 text-sm leading-relaxed">
+              Specializing in secure DeFi architectures and protocol risk modeling. 
+              Bridging the gap between clinical data precision and Web3 decentralization.
+            </p>
+
+            {/* <img
+              src="/images/Professional_Headshot.jpg"
+              alt="Patrick's Profile"
+              className="w-24 h-24 rounded-full mb-4 border-2 border-blue-500"
+            /> */}
+          </div>
+          <div className="mt-8 flex gap-3">
+            <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Solidity</span>
+            <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Python</span>
+            <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Foundry</span>
+          </div>
+        </div>
+
+        {/* 2. MINT INTERFACE (Span 5) */}
+        <div className="md:col-span-5 bg-zinc-900 border border-indigo-500/20 p-6 rounded-2xl shadow-xl shadow-indigo-500/5">
+          <h3 className="text-sm font-mono text-indigo-400 mb-6 uppercase tracking-widest flex items-center gap-2">
+            <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+            Execute_Mint
+          </h3>
+          <div className="space-y-4">
+            <div className="group">
+              <label className="text-[10px] text-zinc-500 uppercase ml-1">Deposit WETH</label>
+              <input 
+                type="number" 
+                className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg" 
+                placeholder="0.00" 
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-zinc-500 uppercase ml-1">Mint DSC</label>
+              <input 
+                type="number" 
+                className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg" 
+                placeholder="0.00" 
+              />
+            </div>
+            <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20 mt-2">
+              DEPOSIT & MINT
+            </button>
+          </div>
+        </div>
+
+        {/* 3. QUICK HEALTH STAT (Span 3) */}
+        <div className="md:col-span-3 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+          <h3 className="text-[10px] text-zinc-500 uppercase mb-4 tracking-[0.2em]">Account_Safety</h3>
+          <div className={`text-5xl font-mono font-bold ${Number(healthFactor) > 1.5 ? 'text-emerald-500' : 'text-amber-500'}`}>
+            {isConnected ? healthFactor : "---"}
+          </div>
+          <p className="text-zinc-500 text-[10px] mt-2 font-mono">Health Factor</p>
+          <div className="w-full bg-zinc-800 h-1.5 mt-6 rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-1000 ${Number(healthFactor) > 1.5 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+              style={{ width: isConnected ? `${Math.min(Number(healthFactor) * 20, 100)}%` : '0%' }}
+            ></div>
+          </div>
+        </div>
+
+        {/* 4. ANALYTICS DASHBOARD (Span 8) */}
+        <div className="md:col-span-8 bg-zinc-900/30 border border-zinc-800 p-6 rounded-2xl min-h-[300px]">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-sm font-mono text-emerald-400 uppercase tracking-widest">Protocol_Metrics</h3>
+            <div className="text-[10px] text-zinc-500 font-mono">LIVE_ANVIL_FEED</div>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <StatCard label="Total Value Locked" value="$1.24M" />
+            <StatCard label="DSC Supply" value="840.2k" />
+            <StatCard label="ETH Price" value="$2,450.00" />
+            <StatCard label="Collateral Ratio" value="154%" />
+          </div>
+
+          <div className="h-48 flex items-center justify-center border border-dashed border-zinc-800 rounded-xl text-zinc-600 text-xs font-mono uppercase tracking-widest">
+            [ Health Distribution Chart Coming Soon ]
+          </div>
+        </div>
+
+        {/* 5. EXPERIENCE LOG (Span 4) */}
+        <div className="md:col-span-4 bg-zinc-900/30 border border-zinc-800 p-6 rounded-2xl">
+          <h3 className="text-sm font-mono text-zinc-400 mb-6 uppercase tracking-widest">Experience_Log</h3>
+          <ul className="space-y-6">
+            <ExperienceItem 
+              title="Lead Developer" 
+              org="GridLock Games" 
+              desc="Optimized MMORPG state-engines for thousands of concurrent users."
+            />
+            <ExperienceItem 
+              title="Data Scientist" 
+              org="Cleveland Clinic" 
+              desc="Built NLP pipelines for clinical biomarker extraction from sensitive data."
+            />
+          </ul>
+        </div>
+
       </main>
 
-      <footer className={styles.footer}>
+      <footer className="max-w-7xl mx-auto mt-12 text-center text-zinc-600 text-[10px] uppercase tracking-widest">
+        &copy; 2026 Patrick Seeman // Engineered for Stability
+      </footer>
+      {/* </main> */}
+
+      {/* <footer className={styles.footer}>
         <a href="https://rainbow.me" rel="noopener noreferrer" target="_blank">
           Made with ❤️ by your frens at 🌈
         </a>
-      </footer>
+      </footer> */}
     </div>
   );
 };
+
+// Small helper components to keep code clean
+function StatCard({ label, value }: { label: string, value: string }) {
+  return (
+    <div className="bg-black/40 border border-zinc-800 p-3 rounded-lg">
+      <div className="text-[9px] text-zinc-500 uppercase mb-1">{label}</div>
+      <div className="text-sm font-mono font-bold text-zinc-200">{value}</div>
+    </div>
+  );
+}
+
+function ExperienceItem({ title, org, desc }: { title: string, org: string, desc: string }) {
+  return (
+    <div className="border-l-2 border-zinc-800 pl-4">
+      <div className="text-xs font-bold">{title} @ {org}</div>
+      <div className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{desc}</div>
+    </div>
+  );
+}
 
 export default Home;
