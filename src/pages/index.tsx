@@ -26,7 +26,8 @@ const Home: NextPage = () => {
     : "0.00";
 
   return (
-    <div className={styles.container}>
+    <div className="relative min-h-screen overflow-hidden">
+
       <Head>
         <title>Web3 Portfolio</title>
         <meta
@@ -36,177 +37,178 @@ const Home: NextPage = () => {
         <link href="/favicon_io/favicon.ico" rel="icon" />
       </Head>
 
-      {/* <main className={styles.main}>
-        <ConnectButton /> */}
+      {/* Animated background layer – full screen, behind everything */}
+      <div className="fixed inset-0 bg-animated -z-10" />
 
       {/* --- HEADER --- */}
-      <header className="max-w-7xl mx-auto flex justify-between items-center mb-8 border-b border-zinc-800 pb-6">
-        <div>
-          <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-tighter">Stablecoin Protocol & Risk Analytics</p>
+      <header className="glass-header sticky top-0 z-20">
+        {/* This div creates full-viewport-width black background */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">  {/* ← top/bottom padding here */}
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
+              <p className="text-zinc-500 text-xs uppercase tracking-tighter">Stablecoin Protocol & Risk Analytics</p>
+            </div>
+            <ConnectButton showBalance={false} chainStatus="name" />
+          </div>
         </div>
-        <ConnectButton showBalance={false} chainStatus="name" />
       </header>
-      
-      {/* --- MAIN BENTO GRID --- */}
-      <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 auto-rows-min">
-        
-        {/* 1. IDENTITY BOX (Span 4) */}
-        <div className="md:col-span-4 bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-between">
-          <div>
-            {/* Header with avatar + name/title side-by-side */}
-            <div className="flex items-center gap-4 sm:gap-5 mb-5">
-              <div className="flex-shrink-0">
-                <img
-                  src="/images/Professional_Headshot.jpg"
-                  alt="Patrick's Profile"
-                  className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-full border-2 border-blue-500"
-                />
-              </div>
-              
-              <div className="min-w-0">
-                <h2 className="text-2xl font-bold leading-tight">Patrick Seeman</h2>
-                <p className="text-indigo-400 font-mono text-sm mt-0.5">Lead Dev & Data Scientist</p>
 
-                {/* Social links – added here */}
-                <div className="flex gap-3 mt-3">
-                  <a
-                    href="https://www.linkedin.com/in/patrick-seeman-5842841a0/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-400 hover:text-blue-500 transition-colors"
-                    aria-label="LinkedIn profile"
-                  >
-                    <img 
-                      src="/images/InBug-White.png" 
-                      alt="LinkedIn" 
-                      className="w-7 h-7 sm:w-8 sm:h-8 object-contain" // adjust size to match your design
-                    />
-                  </a>
-                  
-                  <a
-                    href="https://github.com/LightPat"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-400 hover:text-gray-200 transition-colors"
-                    aria-label="GitHub profile"
-                  >
-                    <img 
-                      src="/images/GitHub_Invertocat_White.png" 
-                      alt="GitHub" 
-                      className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
-                    />
-                  </a>
+      {/* All your visible content – sits on top */}
+      <div className={styles.container + " relative z-0"} style={{ paddingTop: '8px' }}>
+        
+        {/* --- MAIN BENTO GRID --- */}
+        <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 auto-rows-min">
+          
+          {/* 1. IDENTITY BOX (Span 4) */}
+          <div className="md:col-span-4 bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-between">
+            <div>
+              {/* Header with avatar + name/title side-by-side */}
+              <div className="flex items-center gap-4 sm:gap-5 mb-5">
+                <div className="flex-shrink-0">
+                  <img
+                    src="/images/Professional_Headshot.jpg"
+                    alt="Patrick's Profile"
+                    className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-full border-2 border-blue-500"
+                  />
+                </div>
+                
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-bold leading-tight">Patrick Seeman</h2>
+                  <p className="text-indigo-400 font-mono text-sm mt-0.5">Lead Dev & Data Scientist</p>
+
+                  {/* Social links – added here */}
+                  <div className="flex gap-3 mt-3">
+                    <a
+                      href="https://www.linkedin.com/in/patrick-seeman-5842841a0/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-blue-500 transition-colors"
+                      aria-label="LinkedIn profile"
+                    >
+                      <img 
+                        src="/images/InBug-White.png" 
+                        alt="LinkedIn" 
+                        className="w-7 h-7 sm:w-8 sm:h-8 object-contain" // adjust size to match your design
+                      />
+                    </a>
+                    
+                    <a
+                      href="https://github.com/LightPat"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-gray-200 transition-colors"
+                      aria-label="GitHub profile"
+                    >
+                      <img 
+                        src="/images/GitHub_Invertocat_White.png" 
+                        alt="GitHub" 
+                        className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                      />
+                    </a>
+                  </div>
                 </div>
               </div>
+              <p className="text-indigo-400 font-mono text-sm">Lead Dev & Data Scientist</p>
+              <p className="text-zinc-400 mt-4 text-sm leading-relaxed">
+                Specializing in secure DeFi architectures and protocol risk modeling. 
+                Bridging the gap between clinical data precision and Web3 decentralization.
+              </p>
             </div>
-            <p className="text-indigo-400 font-mono text-sm">Lead Dev & Data Scientist</p>
-            <p className="text-zinc-400 mt-4 text-sm leading-relaxed">
-              Specializing in secure DeFi architectures and protocol risk modeling. 
-              Bridging the gap between clinical data precision and Web3 decentralization.
-            </p>
+            <div className="mt-8 flex gap-3">
+              <a href="https://github.com/LightPat/foundry-defi-stablecoin" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Solidity</span></a>
+              <a href="https://www.getfoundry.sh/" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Foundry</span></a>
+              <a href="https://github.com/LightPat/Mobilenet-Image-Classification" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Python</span></a>
+              <a href="https://play.google.com/store/apps/details?id=com.GridlockGames.ViTheGame&hl=en_US" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">C#</span></a>
+              <a href="https://aws.amazon.com/what-is/sql/" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">SQL</span></a>
+            </div>
           </div>
-          <div className="mt-8 flex gap-3">
-            <a href="https://github.com/LightPat/foundry-defi-stablecoin" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Solidity</span></a>
-            <a href="https://www.getfoundry.sh/" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Foundry</span></a>
-            <a href="https://github.com/LightPat/Mobilenet-Image-Classification" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Python</span></a>
-            <a href="https://play.google.com/store/apps/details?id=com.GridlockGames.ViTheGame&hl=en_US" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">C#</span></a>
-            <a href="https://aws.amazon.com/what-is/sql/" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">SQL</span></a>
-          </div>
-        </div>
 
-        {/* 2. MINT INTERFACE (Span 5) */}
-        <div className="md:col-span-5 bg-zinc-900 border border-indigo-500/20 p-6 rounded-2xl shadow-xl shadow-indigo-500/5">
-          <h3 className="text-sm font-mono text-indigo-400 mb-6 uppercase tracking-widest flex items-center gap-2">
-            <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
-            Execute_Mint
-          </h3>
-          <div className="space-y-4">
-            <div className="group">
-              <label className="text-[10px] text-zinc-500 uppercase ml-1">Deposit WETH</label>
-              <input 
-                type="number" 
-                className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg" 
-                placeholder="0.00" 
+          {/* 2. MINT INTERFACE (Span 5) */}
+          <div className="md:col-span-5 bg-zinc-900 border border-indigo-500/20 p-6 rounded-2xl shadow-xl shadow-indigo-500/5">
+            <h3 className="text-sm font-mono text-indigo-400 mb-6 uppercase tracking-widest flex items-center gap-2">
+              <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+              Execute_Mint
+            </h3>
+            <div className="space-y-4">
+              <div className="group">
+                <label className="text-[10px] text-zinc-500 uppercase ml-1">Deposit WETH</label>
+                <input 
+                  type="number" 
+                  className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg" 
+                  placeholder="0.00" 
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-zinc-500 uppercase ml-1">Mint DSC</label>
+                <input 
+                  type="number" 
+                  className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg" 
+                  placeholder="0.00" 
+                />
+              </div>
+              <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20 mt-2">
+                DEPOSIT & MINT
+              </button>
+            </div>
+          </div>
+
+          {/* 3. QUICK HEALTH STAT (Span 3) */}
+          <div className="md:col-span-3 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+            <h3 className="text-[10px] text-zinc-500 uppercase mb-4 tracking-[0.2em]">Account_Safety</h3>
+            <div className={`text-5xl font-mono font-bold ${Number(healthFactor) > 1.5 ? 'text-emerald-500' : 'text-amber-500'}`}>
+              {isConnected ? healthFactor : "---"}
+            </div>
+            <p className="text-zinc-500 text-[10px] mt-2 font-mono">Health Factor</p>
+            <div className="w-full bg-zinc-800 h-1.5 mt-6 rounded-full overflow-hidden">
+              <div 
+                className={`h-full transition-all duration-1000 ${Number(healthFactor) > 1.5 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                style={{ width: isConnected ? `${Math.min(Number(healthFactor) * 20, 100)}%` : '0%' }}
+              ></div>
+            </div>
+          </div>
+
+          {/* 4. ANALYTICS DASHBOARD (Span 8) */}
+          <div className="md:col-span-8 bg-zinc-900/30 border border-zinc-800 p-6 rounded-2xl min-h-[300px]">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-sm font-mono text-emerald-400 uppercase tracking-widest">Protocol_Metrics</h3>
+              <div className="text-[10px] text-zinc-500 font-mono">LIVE_ANVIL_FEED</div>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <StatCard label="Total Value Locked" value="$1.24M" />
+              <StatCard label="DSC Supply" value="840.2k" />
+              <StatCard label="ETH Price" value="$2,450.00" />
+              <StatCard label="Collateral Ratio" value="154%" />
+            </div>
+
+            <div className="h-48 flex items-center justify-center border border-dashed border-zinc-800 rounded-xl text-zinc-600 text-xs font-mono uppercase tracking-widest">
+              [ Health Distribution Chart Coming Soon ]
+            </div>
+          </div>
+
+          {/* 5. EXPERIENCE LOG (Span 4) */}
+          <div className="md:col-span-4 bg-zinc-900/30 border border-zinc-800 p-6 rounded-2xl">
+            <h3 className="text-sm font-mono text-zinc-400 mb-6 uppercase tracking-widest">Experience_Log</h3>
+            <ul className="space-y-6">
+              <ExperienceItem 
+                title="Lead Developer" 
+                org="GridLock Games" 
+                desc="Optimized MMORPG state-engines for thousands of concurrent users."
               />
-            </div>
-            <div>
-              <label className="text-[10px] text-zinc-500 uppercase ml-1">Mint DSC</label>
-              <input 
-                type="number" 
-                className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg" 
-                placeholder="0.00" 
+              <ExperienceItem 
+                title="Data Scientist" 
+                org="Cleveland Clinic" 
+                desc="Built NLP pipelines for clinical biomarker extraction from sensitive data."
               />
-            </div>
-            <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20 mt-2">
-              DEPOSIT & MINT
-            </button>
+            </ul>
           </div>
-        </div>
+        </main>
 
-        {/* 3. QUICK HEALTH STAT (Span 3) */}
-        <div className="md:col-span-3 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-center items-center text-center">
-          <h3 className="text-[10px] text-zinc-500 uppercase mb-4 tracking-[0.2em]">Account_Safety</h3>
-          <div className={`text-5xl font-mono font-bold ${Number(healthFactor) > 1.5 ? 'text-emerald-500' : 'text-amber-500'}`}>
-            {isConnected ? healthFactor : "---"}
-          </div>
-          <p className="text-zinc-500 text-[10px] mt-2 font-mono">Health Factor</p>
-          <div className="w-full bg-zinc-800 h-1.5 mt-6 rounded-full overflow-hidden">
-            <div 
-              className={`h-full transition-all duration-1000 ${Number(healthFactor) > 1.5 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
-              style={{ width: isConnected ? `${Math.min(Number(healthFactor) * 20, 100)}%` : '0%' }}
-            ></div>
-          </div>
-        </div>
-
-        {/* 4. ANALYTICS DASHBOARD (Span 8) */}
-        <div className="md:col-span-8 bg-zinc-900/30 border border-zinc-800 p-6 rounded-2xl min-h-[300px]">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-sm font-mono text-emerald-400 uppercase tracking-widest">Protocol_Metrics</h3>
-            <div className="text-[10px] text-zinc-500 font-mono">LIVE_ANVIL_FEED</div>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <StatCard label="Total Value Locked" value="$1.24M" />
-            <StatCard label="DSC Supply" value="840.2k" />
-            <StatCard label="ETH Price" value="$2,450.00" />
-            <StatCard label="Collateral Ratio" value="154%" />
-          </div>
-
-          <div className="h-48 flex items-center justify-center border border-dashed border-zinc-800 rounded-xl text-zinc-600 text-xs font-mono uppercase tracking-widest">
-            [ Health Distribution Chart Coming Soon ]
-          </div>
-        </div>
-
-        {/* 5. EXPERIENCE LOG (Span 4) */}
-        <div className="md:col-span-4 bg-zinc-900/30 border border-zinc-800 p-6 rounded-2xl">
-          <h3 className="text-sm font-mono text-zinc-400 mb-6 uppercase tracking-widest">Experience_Log</h3>
-          <ul className="space-y-6">
-            <ExperienceItem 
-              title="Lead Developer" 
-              org="GridLock Games" 
-              desc="Optimized MMORPG state-engines for thousands of concurrent users."
-            />
-            <ExperienceItem 
-              title="Data Scientist" 
-              org="Cleveland Clinic" 
-              desc="Built NLP pipelines for clinical biomarker extraction from sensitive data."
-            />
-          </ul>
-        </div>
-
-      </main>
-
-      <footer className="max-w-7xl mx-auto mt-12 text-center text-zinc-600 text-[10px] uppercase tracking-widest">
-        &copy; 2026 Patrick Seeman // Engineered for Stability
-      </footer>
-      {/* </main> */}
-
-      {/* <footer className={styles.footer}>
-        <a href="https://rainbow.me" rel="noopener noreferrer" target="_blank">
-          Made with ❤️ by your frens at 🌈
-        </a>
-      </footer> */}
+        <footer className="max-w-7xl mx-auto mt-12 pb-8 text-center text-zinc-600 text-[10px] uppercase tracking-widest">
+          &copy; 2026 Patrick Seeman // Engineered for Stability
+        </footer>
+      </div>
     </div>
   );
 };
