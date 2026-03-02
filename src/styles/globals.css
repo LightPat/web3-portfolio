@@ -29,15 +29,15 @@ a {
   z-index: -10;
   background: linear-gradient(
     120deg,
-    #0f0f17 0%,
-    #1a1a2e 25%,
-    #111827 50%,
-    #1e293b 75%,
-    #0f0f17 100%
+    #0a0a12 0%,     /* ← darker */
+    #141423 25%,    /* ← darker */
+    #0d111b 50%,    /* ← darker */
+    #172033 75%,    /* ← darker */
+    #0a0a12 100%
   );
-  background-size: 300% 300%;           /* larger = slower & smoother */
-  animation: subtleFlow 18s ease-in-out infinite;
-  filter: blur(1px) brightness(0.9);    /* optional — softens it */
+  background-size: 400% 400%;
+  animation: subtleFlow 28s ease-in-out infinite;
+  filter: blur(1.4px) brightness(0.74) saturate(0.92);
 }
 
 @keyframes subtleFlow {
