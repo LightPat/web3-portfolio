@@ -54,18 +54,26 @@ const Home: NextPage = () => {
         {/* 1. IDENTITY BOX (Span 4) */}
         <div className="md:col-span-4 bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Patrick Seeman</h2>
+            {/* Header with avatar + name/title side-by-side */}
+            <div className="flex items-center gap-4 sm:gap-5 mb-5">
+              <div className="flex-shrink-0">
+                <img
+                  src="/images/Professional_Headshot.jpg"
+                  alt="Patrick's Profile"
+                  className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-full border-2 border-blue-500"
+                />
+              </div>
+              
+              <div className="min-w-0">
+                <h2 className="text-2xl font-bold leading-tight">Patrick Seeman</h2>
+                <p className="text-indigo-400 font-mono text-sm mt-0.5">Lead Dev & Data Scientist</p>
+              </div>
+            </div>
             <p className="text-indigo-400 font-mono text-sm">Lead Dev & Data Scientist</p>
             <p className="text-zinc-400 mt-4 text-sm leading-relaxed">
               Specializing in secure DeFi architectures and protocol risk modeling. 
               Bridging the gap between clinical data precision and Web3 decentralization.
             </p>
-
-            {/* <img
-              src="/images/Professional_Headshot.jpg"
-              alt="Patrick's Profile"
-              className="w-24 h-24 rounded-full mb-4 border-2 border-blue-500"
-            /> */}
           </div>
           <div className="mt-8 flex gap-3">
             <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Solidity</span>
