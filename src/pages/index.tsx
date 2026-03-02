@@ -67,6 +67,37 @@ const Home: NextPage = () => {
               <div className="min-w-0">
                 <h2 className="text-2xl font-bold leading-tight">Patrick Seeman</h2>
                 <p className="text-indigo-400 font-mono text-sm mt-0.5">Lead Dev & Data Scientist</p>
+
+                {/* Social links – added here */}
+                <div className="flex gap-3 mt-3">
+                  <a
+                    href="https://www.linkedin.com/in/patrick-seeman-5842841a0/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-blue-500 transition-colors"
+                    aria-label="LinkedIn profile"
+                  >
+                    <img 
+                      src="/images/InBug-White.png" 
+                      alt="LinkedIn" 
+                      className="w-7 h-7 sm:w-8 sm:h-8 object-contain" // adjust size to match your design
+                    />
+                  </a>
+                  
+                  <a
+                    href="https://github.com/LightPat"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-gray-200 transition-colors"
+                    aria-label="GitHub profile"
+                  >
+                    <img 
+                      src="/images/GitHub_Invertocat_White.png" 
+                      alt="GitHub" 
+                      className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                    />
+                  </a>
+                </div>
               </div>
             </div>
             <p className="text-indigo-400 font-mono text-sm">Lead Dev & Data Scientist</p>
@@ -76,9 +107,11 @@ const Home: NextPage = () => {
             </p>
           </div>
           <div className="mt-8 flex gap-3">
-            <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Solidity</span>
-            <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Python</span>
-            <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Foundry</span>
+            <a href="https://github.com/LightPat/foundry-defi-stablecoin" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Solidity</span></a>
+            <a href="https://www.getfoundry.sh/" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Foundry</span></a>
+            <a href="https://github.com/LightPat/Mobilenet-Image-Classification" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Python</span></a>
+            <a href="https://play.google.com/store/apps/details?id=com.GridlockGames.ViTheGame&hl=en_US" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">C#</span></a>
+            <a href="https://aws.amazon.com/what-is/sql/" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">SQL</span></a>
           </div>
         </div>
 
