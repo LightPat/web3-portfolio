@@ -194,20 +194,32 @@ const Home: NextPage = () => {
               <ExperienceItem 
                 title="Research Data Scientist I" 
                 org="Cleveland Clinic" 
-                period="Present"
-                desc="Optimized MMORPG state-engines for thousands of concurrent users."
+                period="Feb 2026 - Present"
+                desc="Restructured data warehouse for more optimal queries and ease of use for clinical studies"
               />
               <ExperienceItem 
                 title="Lead Developer" 
                 org="GridLock Games" 
-                period="2015"
-                desc="Optimized MMORPG state-engines for thousands of concurrent users."
+                period="March 2023 - November 2025"
+                desc="Led cross-platform MMORPG development in an agile environment, ensuring on-time feature delivery and team coordination."
               />
               <ExperienceItem 
-                title="Data Scientist" 
+                title="Data Scientist I" 
                 org="Cleveland Clinic"
-                period="2014"
-                desc="Built NLP pipelines for clinical biomarker extraction from sensitive data."
+                period="Sep 2023 - February 2025"
+                desc="Built ML language model to extract structured data from pathology reports, improving data accessibility for research and clinical use."
+              />
+              <ExperienceItem 
+                title="Associate Data Scientist" 
+                org="Cleveland Clinic"
+                period="June 2022 - September 2023"
+                desc="Developed Python web app to automate clinical scheduling at Taussig Cancer Institute, reducing manual scheduling errors and staff time."
+              />
+              <ExperienceItem 
+                title="Machine Learning Intern" 
+                org="Cleveland Clinic"
+                period="May 2021 - May 2022"
+                desc="Implemented Python/TensorFlow pipelines for image recognition models, training neural networks on 51,000 insurance card images."
               />
             </ul>
           </div>
@@ -233,13 +245,25 @@ function StatCard({ label, value }: { label: string, value: string }) {
 
 function ExperienceItem({ title, org, period, desc }: { title: string, org: string, period: string, desc: string }) {
   return (
-    <div className="border-l-2 border-zinc-800 pl-4">
-      <div className="flex items-baseline gap-2 text-xs">
-        <span className="font-bold">{title} @ {org}</span>
-        <span className="text-zinc-600 font-medium">{period}</span>
+    <div className="border-l-2 border-zinc-800 pl-4 pb-1"> {/* pb-1 optional – breathing room between items */}
+      <div className="flex justify-between items-baseline gap-4">
+        <div className="text-sm font-semibold text-zinc-100">
+          {title}
+        </div>
+        <div className="text-[13px] text-zinc-500 font-medium shrink-0 whitespace-nowrap">
+          {period}
+        </div>
       </div>
+
+      {/* Organization on its own line – lighter & smaller */}
+      <div className="text-[12px] text-zinc-400 mt-0.5 mb-1.5">
+        {org}
+      </div>
+
       {desc && (
-        <div className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{desc}</div>
+        <div className="text-[11px] text-zinc-400 leading-relaxed">
+          {desc}
+        </div>
       )}
     </div>
   );
