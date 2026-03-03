@@ -46,9 +46,26 @@ const Home: NextPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">  {/* ← top/bottom padding here */}
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
+              <a href="https://github.com/LightPat/foundry-defi-stablecoin" target="_blank" rel="noopener noreferrer">
+                <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
+              </a>
               <p className="text-zinc-500 text-xs uppercase tracking-tighter">Stablecoin Protocol & Risk Analytics</p>
             </div>
+            <a
+              href="https://etherscan.io/address/YOUR_CONTRACT_ADDRESS_HERE"  // ← replace with real link
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                px-3 py-1.5 text-xs font-medium
+                text-indigo-400 hover:text-indigo-300
+                bg-indigo-950/40 hover:bg-indigo-900/50
+                border border-indigo-500/30 hover:border-indigo-400/50
+                rounded-md transition-colors duration-150
+                whitespace-nowrap
+              "
+            >
+              View on Etherscan ↗
+            </a>
             <ConnectButton showBalance={false} chainStatus="name" />
           </div>
         </div>
@@ -75,7 +92,7 @@ const Home: NextPage = () => {
                 
                 <div className="min-w-0">
                   <h2 className="text-2xl font-bold leading-tight">Patrick Seeman</h2>
-                  <p className="text-indigo-400 font-mono text-sm mt-0.5">Lead Dev & Data Scientist</p>
+                  <p className="text-indigo-400 font-mono text-sm mt-0.5">Solidity Developer</p>
 
                   {/* Social links – added here */}
                   <div className="flex gap-3 mt-3">
@@ -109,10 +126,9 @@ const Home: NextPage = () => {
                   </div>
                 </div>
               </div>
-              <p className="text-indigo-400 font-mono text-sm">Lead Dev & Data Scientist</p>
+              <p className="text-indigo-400 font-mono text-sm">Smart Contract Engineer | Solidity & Foundry</p>
               <p className="text-zinc-400 mt-4 text-sm leading-relaxed">
-                Specializing in secure DeFi architectures and protocol risk modeling. 
-                Bridging the gap between clinical data precision and Web3 decentralization.
+                Building secure smart contracts & DeFi protocols. Foundry expert with hands-on projects in stablecoins and NFT collections. Background in high-stakes data engineering and ML at Cleveland Clinic.
               </p>
             </div>
             <div className="mt-8 flex gap-3">
