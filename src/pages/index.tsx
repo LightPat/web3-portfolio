@@ -192,13 +192,21 @@ const Home: NextPage = () => {
             <h3 className="text-sm font-mono text-zinc-400 mb-6 uppercase tracking-widest">Experience_Log</h3>
             <ul className="space-y-6">
               <ExperienceItem 
+                title="Research Data Scientist I" 
+                org="Cleveland Clinic" 
+                period="Present"
+                desc="Optimized MMORPG state-engines for thousands of concurrent users."
+              />
+              <ExperienceItem 
                 title="Lead Developer" 
                 org="GridLock Games" 
+                period="2015"
                 desc="Optimized MMORPG state-engines for thousands of concurrent users."
               />
               <ExperienceItem 
                 title="Data Scientist" 
-                org="Cleveland Clinic" 
+                org="Cleveland Clinic"
+                period="2014"
                 desc="Built NLP pipelines for clinical biomarker extraction from sensitive data."
               />
             </ul>
@@ -223,11 +231,16 @@ function StatCard({ label, value }: { label: string, value: string }) {
   );
 }
 
-function ExperienceItem({ title, org, desc }: { title: string, org: string, desc: string }) {
+function ExperienceItem({ title, org, period, desc }: { title: string, org: string, period: string, desc: string }) {
   return (
     <div className="border-l-2 border-zinc-800 pl-4">
-      <div className="text-xs font-bold">{title} @ {org}</div>
-      <div className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{desc}</div>
+      <div className="flex items-baseline gap-2 text-xs">
+        <span className="font-bold">{title} @ {org}</span>
+        <span className="text-zinc-600 font-medium">{period}</span>
+      </div>
+      {desc && (
+        <div className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{desc}</div>
+      )}
     </div>
   );
 }
