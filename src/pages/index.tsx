@@ -194,7 +194,7 @@ const Home: NextPage = () => {
               <ExperienceItem 
                 title="Research Data Scientist I" 
                 org="Cleveland Clinic" 
-                period="Feb 2026 - Present"
+                period="February 2026 - Present"
                 desc="Restructured data warehouse for more optimal queries and ease of use for clinical studies"
               />
               <ExperienceItem 
@@ -206,7 +206,7 @@ const Home: NextPage = () => {
               <ExperienceItem 
                 title="Data Scientist I" 
                 org="Cleveland Clinic"
-                period="Sep 2023 - February 2025"
+                period="September 2023 - February 2025"
                 desc="Built ML language model to extract structured data from pathology reports, improving data accessibility for research and clinical use."
               />
               <ExperienceItem 
