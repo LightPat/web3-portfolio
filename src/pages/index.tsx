@@ -4,22 +4,45 @@ import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { DSC_ENGINE_ABI, DSC_ENGINE_ADDRESS } from '../constants/abi';
+import { DSC_ENGINE_ABI } from '../constants/generated';
+import { DSC_ENGINE_ADDRESS } from '../constants/constants';
 
 const Home: NextPage = () => {
   const { address, isConnected } = useAccount();
 
-  // Fetch Health Factor from your Smart Contract
-  const { data: healthFactorRaw } = useReadContract({
+  const { data, isLoading, error } = useReadContract({
+    address: DSC_ENGINE_ADDRESS,
     abi: DSC_ENGINE_ABI,
-    address: DSC_ENGINE_ADDRESS as `0x${string}`,
+    functionName: 'getAccountInformation',
+    args: [address!]
+  })
+
+  // Or safer (recommended):
+  let totalDscMinted = 0n
+  let collateralValueInUsd = 0n
+
+  if (data) {
+    [totalDscMinted, collateralValueInUsd] = data
+  }
+
+  const { data: healthFactorRaw } = useReadContract({
+    address: DSC_ENGINE_ADDRESS,
+    abi: DSC_ENGINE_ABI,
     functionName: 'getHealthFactor',
-    args: [address],
-    query: {
-      enabled: !!address,
-      refetchInterval: 3000, 
-    }
-  });
+    args: [address!]
+  })
+
+  // Fetch Health Factor from your Smart Contract
+  // const { data: healthFactorRaw } = useReadContract({
+  //   abi: DSC_ENGINE_ABI,
+  //   address: DSC_ENGINE_ADDRESS as `0x${string}`,
+  //   functionName: 'getHealthFactor',
+  //   args: [address],
+  //   query: {
+  //     enabled: !!address,
+  //     refetchInterval: 3000, 
+  //   }
+  // });
 
   const healthFactor = healthFactorRaw 
     ? parseFloat(formatUnits(healthFactorRaw as bigint, 18)).toFixed(2) 
@@ -172,14 +195,14 @@ const Home: NextPage = () => {
           {/* 3. QUICK HEALTH STAT (Span 3) */}
           <div className="md:col-span-3 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-center items-center text-center">
             <h3 className="text-[10px] text-zinc-500 uppercase mb-4 tracking-[0.2em]">Account_Safety</h3>
-            <div className={`text-5xl font-mono font-bold ${Number(healthFactor) > 1.5 ? 'text-emerald-500' : 'text-amber-500'}`}>
-              {isConnected ? healthFactor : "---"}
+            <div className={`text-5xl font-mono font-bold ${Number(healthFactor) > 1.5 && totalDscMinted > 0 ? 'text-emerald-500' : 'text-amber-500'}`}>
+              {isConnected && totalDscMinted > 0 ? healthFactor : "---"}
             </div>
             <p className="text-zinc-500 text-[10px] mt-2 font-mono">Health Factor</p>
             <div className="w-full bg-zinc-800 h-1.5 mt-6 rounded-full overflow-hidden">
               <div 
-                className={`h-full transition-all duration-1000 ${Number(healthFactor) > 1.5 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
-                style={{ width: isConnected ? `${Math.min(Number(healthFactor) * 20, 100)}%` : '0%' }}
+                className={`h-full transition-all duration-1000 ${Number(healthFactor) > 1.5 && totalDscMinted > 0 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                style={{ width: isConnected && totalDscMinted > 0 ? `${Math.min(Number(healthFactor) * 20, 100)}%` : '0%' }}
               ></div>
             </div>
           </div>
