@@ -457,9 +457,9 @@ const Home: NextPage = () => {
             </div>
 
             {/* Health Distribution Chart */}
-            <div className="mt-2">
+            <div className="mt-2 border border-dashed border-zinc-800 rounded-xl">
               {/* FIX 3: Added 'text-center' to this header class */}
-              <h4 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-4 text-center">
+              <h4 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mt-2 mb-4 text-center">
                 System Health Distribution (Users)
               </h4>
               
