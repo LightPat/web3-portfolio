@@ -7,7 +7,7 @@ import { formatUnits, parseUnits } from 'viem';
 import { DSC_ENGINE_ABI, DECENTRALIZED_STABLE_COIN_ABI } from '../constants/generated';
 import { DSC_ENGINE_ADDRESS, WETH_ADDRESS } from '../constants/constants';
 import { Popover, Transition, PopoverButton, PopoverPanel } from '@headlessui/react'
-import { Fragment, useState } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 
 const Home: NextPage = () => {
@@ -47,7 +47,7 @@ const Home: NextPage = () => {
   const mintWei = mintAmount ? parseUnits(mintAmount,   18) : 0n;
 
   // A. Read current allowance (WETH → DSCEngine)
-  const { data: allowanceRaw } = useReadContract({
+  const { data: allowanceRaw, refetch: refetchAllowance } = useReadContract({
     address: WETH_ADDRESS,
     abi: DECENTRALIZED_STABLE_COIN_ABI,
     functionName: 'allowance',
@@ -66,7 +66,7 @@ const Home: NextPage = () => {
   } = useWriteContract();
 
   // C. Wait for approval confirmation
-  const { isSuccess: approveSuccess } = useWaitForTransactionReceipt({
+  const { isSuccess: approveSuccess, isLoading: isConfirmingApproval } = useWaitForTransactionReceipt({
     hash: approveTxHash,
   });
 
@@ -78,9 +78,85 @@ const Home: NextPage = () => {
   } = useWriteContract();
 
   // Optional: wait for mint tx too
-  const { isSuccess: mintSuccess } = useWaitForTransactionReceipt({
+  const { isSuccess: mintSuccess, isLoading: isConfirmingMint } = useWaitForTransactionReceipt({
     hash: mintTxHash,
   });
+
+  const [isApprovalPending, setIsApprovalPending] = useState(false);
+  const [isConsumptionPending, setIsConsumptionPending] = useState(false);
+  const isAllowanceUpdating = isApprovalPending || isConsumptionPending;
+
+  // NEW: Store snapshots when tx is SENT (not when mined)
+  const [preApprovalAllowance, setPreApprovalAllowance] = useState<bigint | null>(null);
+  const [preMintAllowance, setPreMintAllowance] = useState<bigint | null>(null);
+
+  // ────────────────────────────────────────────────
+  // APPROVAL FLOW
+  // ────────────────────────────────────────────────
+  useEffect(() => {
+    if (approveTxHash && !approveSuccess && allowance !== null) {
+      setIsApprovalPending(true);
+      setPreApprovalAllowance(allowance); // snapshot BEFORE mining
+    }
+  }, [approveTxHash, approveSuccess, allowance]);
+
+  useEffect(() => {
+    if (approveSuccess) {
+      const interval = setInterval(() => {
+        refetchAllowance();
+        if (allowance > (preApprovalAllowance ?? 0n)) { // increased from snapshot
+          setIsApprovalPending(false);
+          setPreApprovalAllowance(null); // cleanup
+          clearInterval(interval);
+        }
+      }, 800); // slightly faster for local dev
+
+      return () => clearInterval(interval);
+    }
+  }, [approveSuccess, allowance, preApprovalAllowance, refetchAllowance]);
+
+  // ────────────────────────────────────────────────
+  // MINT / DEPOSIT FLOW
+  // ────────────────────────────────────────────────
+  useEffect(() => {
+    if (mintTxHash && !mintSuccess && allowance !== null) {
+      setIsConsumptionPending(true);
+      setPreMintAllowance(allowance); // snapshot BEFORE mining
+    }
+  }, [mintTxHash, mintSuccess, allowance]);
+
+  useEffect(() => {
+    if (mintSuccess) {
+      const interval = setInterval(() => {
+        refetchAllowance();
+        if (
+          preMintAllowance !== null &&
+          allowance < preMintAllowance // decreased from snapshot
+        ) {
+          setIsConsumptionPending(false);
+          setPreMintAllowance(null); // cleanup
+          clearInterval(interval);
+        }
+      }, 800);
+
+      return () => clearInterval(interval);
+    }
+  }, [mintSuccess, allowance, preMintAllowance, refetchAllowance]);
+
+  // Safety net: force reset if stuck too long (e.g. 45s)
+  useEffect(() => {
+    if (isAllowanceUpdating) {
+      const safety = setTimeout(() => {
+        setIsApprovalPending(false);
+        setIsConsumptionPending(false);
+        setPreApprovalAllowance(null);
+        setPreMintAllowance(null);
+        console.warn("Allowance pending timeout - forced reset");
+      }, 45000);
+
+      return () => clearTimeout(safety);
+    }
+  }, [isAllowanceUpdating]);
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -300,10 +376,13 @@ const Home: NextPage = () => {
                         args: [DSC_ENGINE_ADDRESS, depositWei * 110n / 100n], // slight buffer ~10%
                       })
                     }
-                    disabled={isApproving || !isConnected}
+                    disabled={isApproving || isConfirmingApproval || isAllowanceUpdating || !isConnected}
                     className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-yellow-600/20 mt-2 disabled:opacity-50"
                   >
-                    {isApproving ? 'Approving...' : 'Approve WETH'}
+                    {isApproving ? 'Waiting for wallet...' :
+                    isConfirmingApproval ? 'Confirming...' :
+                    isAllowanceUpdating ? "Updating allowance..." :
+                    'Approve WETH'}
                   </button>
                 ) : (
                   <button
@@ -315,10 +394,13 @@ const Home: NextPage = () => {
                         args: [WETH_ADDRESS, depositWei, mintWei],
                       })
                     }
-                    disabled={isMinting || !isConnected}
+                    disabled={isMinting || isConfirmingMint || isAllowanceUpdating || !isConnected}
                     className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20 mt-2 disabled:opacity-50"
                   >
-                    {isMinting ? 'Processing...' : 'DEPOSIT & MINT'}
+                    {isMinting ? 'Processing...' :
+                    isConfirmingMint ? 'Confirming...' :
+                    isAllowanceUpdating ? "Updating allowance..." :
+                    'DEPOSIT & MINT'}
                   </button>
                 )
               ) : (
@@ -328,8 +410,8 @@ const Home: NextPage = () => {
               )}
 
               {/* Optional feedback */}
-              {approveSuccess && <p className="text-green-400 text-sm mt-2">Approval successful! You can now mint.</p>}
-              {mintSuccess && <p className="text-green-400 text-sm mt-2">Deposit & Mint completed!</p>}
+              {/* {approveSuccess && <p className="text-green-400 text-sm mt-2">Approval successful! You can now mint.</p>}
+              {mintSuccess && <p className="text-green-400 text-sm mt-2">Deposit & Mint completed!</p>} */}
             </div>
           </div>
 
