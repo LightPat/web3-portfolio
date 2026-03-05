@@ -10,7 +10,7 @@ import { Popover, Transition, PopoverButton, PopoverPanel } from '@headlessui/re
 import { Fragment, useState, useEffect } from 'react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Rectangle } from 'recharts';
 
 const Home: NextPage = () => {
   const { address, isConnected } = useAccount();
@@ -456,10 +456,13 @@ const Home: NextPage = () => {
               <StatCard label="Collateral Ratio" value="154%" />
             </div>
 
+            {/* Health Distribution Chart */}
             <div className="mt-2">
-              <h4 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-4">
+              {/* FIX 3: Added 'text-center' to this header class */}
+              <h4 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-4 text-center">
                 System Health Distribution (Users)
               </h4>
+              
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart 
@@ -468,7 +471,7 @@ const Home: NextPage = () => {
                   >
                     <XAxis 
                       dataKey="range" 
-                      stroke="#52525b" // zinc-600
+                      stroke="#52525b" 
                       fontSize={12} 
                       tickLine={false} 
                       axisLine={false} 
@@ -482,24 +485,29 @@ const Home: NextPage = () => {
                       fontFamily="monospace" 
                     />
                     <Tooltip
-                      cursor={{ fill: '#27272a', opacity: 0.4 }} // zinc-800
+                      cursor={{ fill: '#27272a', opacity: 0.4 }}
                       contentStyle={{ 
-                        backgroundColor: '#18181b', // zinc-900
-                        borderColor: '#27272a',     // zinc-800
+                        backgroundColor: '#18181b',
+                        borderColor: '#27272a',    
                         borderRadius: '12px', 
-                        color: '#a1a1aa',           // zinc-400
+                        color: '#a1a1aa',          
                         fontFamily: 'monospace',
                         fontSize: '12px' 
                       }}
-                      itemStyle={{ color: '#34d399', fontWeight: 'bold' }} // emerald-400
-                      formatter={(value: number) => [`${value} Users`, 'Positions']}
+                      itemStyle={{ color: '#34d399', fontWeight: 'bold' }}
+                      // FIX 1: Updated type to number | undefined and added a fallback (value || 0)
+                      formatter={(value: number | undefined) => [`${value || 0} Users`, 'Positions']}
                       labelStyle={{ color: '#d4d4d8', marginBottom: '4px' }}
                     />
-                    <Bar dataKey="users" radius={[4, 4, 0, 0]}>
-                      {healthDistributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Bar>
+                    {/* FIX 2: Used shape prop with Rectangle instead of mapping Cell components */}
+                    <Bar 
+                      dataKey="users" 
+                      shape={(props: any) => {
+                        // Destructure payload to get our custom fill color, pass the rest to Rectangle
+                        const { payload, ...rest } = props;
+                        return <Rectangle {...rest} fill={payload.fill} radius={[4, 4, 0, 0]} />;
+                      }} 
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
