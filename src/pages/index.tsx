@@ -6,6 +6,9 @@ import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
 import { DSC_ENGINE_ABI } from '../constants/generated';
 import { DSC_ENGINE_ADDRESS } from '../constants/constants';
+import { Popover, Transition, PopoverButton, PopoverPanel } from '@headlessui/react'
+import { Fragment } from 'react'
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 
 const Home: NextPage = () => {
   const { address, isConnected } = useAccount();
@@ -17,7 +20,6 @@ const Home: NextPage = () => {
     args: [address!]
   })
 
-  // Or safer (recommended):
   let totalDscMinted = 0n
   let collateralValueInUsd = 0n
 
@@ -31,18 +33,6 @@ const Home: NextPage = () => {
     functionName: 'getHealthFactor',
     args: [address!]
   })
-
-  // Fetch Health Factor from your Smart Contract
-  // const { data: healthFactorRaw } = useReadContract({
-  //   abi: DSC_ENGINE_ABI,
-  //   address: DSC_ENGINE_ADDRESS as `0x${string}`,
-  //   functionName: 'getHealthFactor',
-  //   args: [address],
-  //   query: {
-  //     enabled: !!address,
-  //     refetchInterval: 3000, 
-  //   }
-  // });
 
   const healthFactor = healthFactorRaw 
     ? parseFloat(formatUnits(healthFactorRaw as bigint, 18)).toFixed(2) 
@@ -68,12 +58,75 @@ const Home: NextPage = () => {
         {/* This div creates full-viewport-width black background */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">  {/* ← top/bottom padding here */}
           <div className="flex justify-between items-center">
-            <div>
-              <a href="https://github.com/LightPat/foundry-defi-stablecoin" target="_blank" rel="noopener noreferrer">
-                <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
-              </a>
-              <p className="text-zinc-500 text-xs uppercase tracking-tighter">Stablecoin Protocol & Risk Analytics</p>
+            <div className="flex items-center gap-2">
+              <div>
+                <a href="https://github.com/LightPat/foundry-defi-stablecoin" target="_blank" rel="noopener noreferrer">
+                  <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
+                </a>
+                <p className="text-zinc-500 text-xs uppercase tracking-tighter">Stablecoin Protocol & Risk Analytics</p>
+              </div>
+
+              {/* ← Help Popover here */}
+              <Popover className="relative">
+                {({ open }) => (
+                  <>
+                    <PopoverButton className="p-1 rounded-full hover:bg-indigo-950/40 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+                      <QuestionMarkCircleIcon className="h-5 w-5 text-indigo-400 hover:text-indigo-300" />
+                    </PopoverButton>
+
+                    <Transition
+                      as={Fragment}
+                      enter="transition ease-out duration-150"
+                      enterFrom="opacity-0 translate-y-1"
+                      enterTo="opacity-100 translate-y-0"
+                      leave="transition ease-in duration-100"
+                      leaveFrom="opacity-100 translate-y-0"
+                      leaveTo="opacity-0 translate-y-1"
+                    >
+                      <PopoverPanel className="
+                        absolute left-1/2 -translate-x-1/2 mt-2 w-80 sm:w-96
+                        border border-indigo-500/30 rounded-lg shadow-2xl
+                        text-zinc-200 text-sm
+                        overflow-hidden z-30
+                        bg-zinc-950/95
+                      ">
+                        <div className="p-5 space-y-4">
+                          <h3 className="font-semibold text-indigo-400 text-base">
+                            DSC Protocol Overview
+                          </h3>
+
+                          <p>
+                            Decentralized StableCoin (DSC) is an over-collateralized, decentralized stablecoin protocol built with Foundry.
+                          </p>
+
+                          <ul className="space-y-2 text-zinc-400 text-xs leading-relaxed">
+                            <li>• Pegged to 1 USD via algorithmic mechanisms</li>
+                            <li>• Collateral: ETH, BTC wrappers, stable LP tokens</li>
+                            <li>• Liquidation engine with health factor monitoring</li>
+                            <li>• Risk analytics dashboard (TVL, collateral ratio, liquidation risk)</li>
+                            <li>Audited (or in progress) – use at your own risk</li>
+                          </ul>
+
+                          <div className="pt-2 border-t border-zinc-700/50 text-center">
+                            <a
+                              href="https://github.com/LightPat/foundry-defi-stablecoin"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-indigo-400 hover:text-indigo-300 text-xs underline"
+                            >
+                              View GitHub repo & documentation →
+                            </a>
+                          </div>
+                        </div>
+                      </PopoverPanel>
+                    </Transition>
+                  </>
+                )}
+              </Popover>
             </div>
+            
+            <ConnectButton showBalance={false} chainStatus="name" />
+
             <a
               href="https://etherscan.io/address/YOUR_CONTRACT_ADDRESS_HERE"  // ← replace with real link
               target="_blank"
@@ -89,7 +142,6 @@ const Home: NextPage = () => {
             >
               View on Etherscan ↗
             </a>
-            <ConnectButton showBalance={false} chainStatus="name" />
           </div>
         </div>
       </header>
