@@ -2,12 +2,12 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
-import { useAccount, useReadContract } from 'wagmi';
-import { formatUnits } from 'viem';
-import { DSC_ENGINE_ABI } from '../constants/generated';
-import { DSC_ENGINE_ADDRESS } from '../constants/constants';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { formatUnits, parseUnits } from 'viem';
+import { DSC_ENGINE_ABI, DECENTRALIZED_STABLE_COIN_ABI } from '../constants/generated';
+import { DSC_ENGINE_ADDRESS, WETH_ADDRESS } from '../constants/constants';
 import { Popover, Transition, PopoverButton, PopoverPanel } from '@headlessui/react'
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 
 const Home: NextPage = () => {
@@ -37,6 +37,50 @@ const Home: NextPage = () => {
   const healthFactor = healthFactorRaw 
     ? parseFloat(formatUnits(healthFactorRaw as bigint, 18)).toFixed(2) 
     : "0.00";
+
+  // User inputs (use controlled inputs instead of uncontrolled for real app)
+  const [depositAmount, setDepositAmount] = useState<string>('');     // e.g. "1.5"
+  const [mintAmount, setMintAmount] = useState<string>('');           // e.g. "750"
+
+  // Convert to wei (18 decimals — adjust if your WETH/DSC uses different)
+  const depositWei = depositAmount ? parseUnits(depositAmount, 18) : 0n;
+  const mintWei = mintAmount ? parseUnits(mintAmount,   18) : 0n;
+
+  // A. Read current allowance (WETH → DSCEngine)
+  const { data: allowanceRaw } = useReadContract({
+    address: WETH_ADDRESS,
+    abi: DECENTRALIZED_STABLE_COIN_ABI,
+    functionName: 'allowance',
+    args: [address!, DSC_ENGINE_ADDRESS],
+    // only query if connected + inputs exist
+    query: { enabled: isConnected && !!address && depositWei > 0n },
+  });
+
+  const allowance = allowanceRaw ?? 0n;
+
+  // B. Prepare approve write
+  const { 
+    writeContract: writeApprove, 
+    isPending: isApproving,
+    data: approveTxHash 
+  } = useWriteContract();
+
+  // C. Wait for approval confirmation
+  const { isSuccess: approveSuccess } = useWaitForTransactionReceipt({
+    hash: approveTxHash,
+  });
+
+  // D. Prepare depositAndMint write (only when we know allowance is enough)
+  const { 
+    writeContract: writeDepositAndMint, 
+    isPending: isMinting,
+    data: mintTxHash 
+  } = useWriteContract();
+
+  // Optional: wait for mint tx too
+  const { isSuccess: mintSuccess } = useWaitForTransactionReceipt({
+    hash: mintTxHash,
+  });
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -230,6 +274,8 @@ const Home: NextPage = () => {
                   type="number" 
                   className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg" 
                   placeholder="0.00" 
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
                 />
               </div>
               <div>
@@ -238,11 +284,52 @@ const Home: NextPage = () => {
                   type="number" 
                   className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg" 
                   placeholder="0.00" 
+                  value={mintAmount}
+                  onChange={(e) => setMintAmount(e.target.value)}
                 />
               </div>
-              <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20 mt-2">
-                DEPOSIT & MINT
-              </button>
+
+              {depositWei > 0n && mintWei > 0n ? (
+                allowance < depositWei ? (
+                  <button
+                    onClick={() => 
+                      writeApprove({
+                        address: WETH_ADDRESS,
+                        abi: DECENTRALIZED_STABLE_COIN_ABI,
+                        functionName: 'approve',
+                        args: [DSC_ENGINE_ADDRESS, depositWei * 110n / 100n], // slight buffer ~10%
+                      })
+                    }
+                    disabled={isApproving || !isConnected}
+                    className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-yellow-600/20 mt-2 disabled:opacity-50"
+                  >
+                    {isApproving ? 'Approving...' : 'Approve WETH'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => 
+                      writeDepositAndMint({
+                        address: DSC_ENGINE_ADDRESS,
+                        abi: DSC_ENGINE_ABI,           // your full engine ABI
+                        functionName: 'depositCollateralAndMintDsc',
+                        args: [WETH_ADDRESS, depositWei, mintWei],
+                      })
+                    }
+                    disabled={isMinting || !isConnected}
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20 mt-2 disabled:opacity-50"
+                  >
+                    {isMinting ? 'Processing...' : 'DEPOSIT & MINT'}
+                  </button>
+                )
+              ) : (
+                <button disabled className="w-full bg-zinc-700 text-zinc-400 font-bold py-4 rounded-xl mt-2 cursor-not-allowed">
+                  Enter amounts to continue
+                </button>
+              )}
+
+              {/* Optional feedback */}
+              {approveSuccess && <p className="text-green-400 text-sm mt-2">Approval successful! You can now mint.</p>}
+              {mintSuccess && <p className="text-green-400 text-sm mt-2">Deposit & Mint completed!</p>}
             </div>
           </div>
 
