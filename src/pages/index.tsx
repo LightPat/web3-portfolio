@@ -9,6 +9,8 @@ import { DSC_ENGINE_ADDRESS, WETH_ADDRESS } from '../constants/constants';
 import { Popover, Transition, PopoverButton, PopoverPanel } from '@headlessui/react'
 import { Fragment, useState, useEffect } from 'react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+import React from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const Home: NextPage = () => {
   const { address, isConnected } = useAccount();
@@ -157,6 +159,16 @@ const Home: NextPage = () => {
       return () => clearTimeout(safety);
     }
   }, [isAllowanceUpdating]);
+
+  // Mock data representing how many users/positions are at various health factors.
+  // A health factor < 1.0 means they are undercollateralized and liquidatable.
+  const healthDistributionData = [
+    { range: '< 1.0', users: 2, fill: '#ef4444' },    // Danger: Red-500
+    { range: '1.0 - 1.2', users: 12, fill: '#f59e0b' }, // Warning: Amber-500
+    { range: '1.2 - 1.5', users: 28, fill: '#10b981' }, // Safe: Emerald-500
+    { range: '1.5 - 2.0', users: 45, fill: '#34d399' }, // Very Safe: Emerald-400
+    { range: '2.0+', users: 31, fill: '#6ee7b7' },      // Overcollateralized: Emerald-300
+  ];
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -444,8 +456,53 @@ const Home: NextPage = () => {
               <StatCard label="Collateral Ratio" value="154%" />
             </div>
 
-            <div className="h-48 flex items-center justify-center border border-dashed border-zinc-800 rounded-xl text-zinc-600 text-xs font-mono uppercase tracking-widest">
-              [ Health Distribution Chart Coming Soon ]
+            <div className="mt-2">
+              <h4 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-4">
+                System Health Distribution (Users)
+              </h4>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart 
+                    data={healthDistributionData} 
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <XAxis 
+                      dataKey="range" 
+                      stroke="#52525b" // zinc-600
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false} 
+                      fontFamily="monospace"
+                    />
+                    <YAxis 
+                      stroke="#52525b" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false}
+                      fontFamily="monospace" 
+                    />
+                    <Tooltip
+                      cursor={{ fill: '#27272a', opacity: 0.4 }} // zinc-800
+                      contentStyle={{ 
+                        backgroundColor: '#18181b', // zinc-900
+                        borderColor: '#27272a',     // zinc-800
+                        borderRadius: '12px', 
+                        color: '#a1a1aa',           // zinc-400
+                        fontFamily: 'monospace',
+                        fontSize: '12px' 
+                      }}
+                      itemStyle={{ color: '#34d399', fontWeight: 'bold' }} // emerald-400
+                      formatter={(value: number) => [`${value} Users`, 'Positions']}
+                      labelStyle={{ color: '#d4d4d8', marginBottom: '4px' }}
+                    />
+                    <Bar dataKey="users" radius={[4, 4, 0, 0]}>
+                      {healthDistributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
