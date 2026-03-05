@@ -60,9 +60,7 @@ const Home: NextPage = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div>
-                <a href="https://github.com/LightPat/foundry-defi-stablecoin" target="_blank" rel="noopener noreferrer">
-                  <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
-                </a>
+                <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
                 <p className="text-zinc-500 text-xs uppercase tracking-tighter">Stablecoin Protocol & Risk Analytics</p>
               </div>
 
