@@ -57,7 +57,7 @@ const Home: NextPage = () => {
       <header className="glass-header sticky top-0 z-20">
         {/* This div creates full-viewport-width black background */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">  {/* ← top/bottom padding here */}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-wrap justify-between items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-2">
               <div>
                 <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
@@ -123,7 +123,11 @@ const Home: NextPage = () => {
               </Popover>
             </div>
             
-            <ConnectButton showBalance={false} chainStatus="name" />
+            <ConnectButton
+              showBalance={{ smallScreen: false, largeScreen: false }}
+              chainStatus={{ smallScreen: "icon", largeScreen: "full" }}
+              accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
+            />
 
             <a
               href="https://etherscan.io/address/YOUR_CONTRACT_ADDRESS_HERE"  // ← replace with real link
