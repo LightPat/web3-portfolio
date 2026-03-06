@@ -492,19 +492,19 @@ const Home: NextPage = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <StatCard 
                 label="Total Value Locked" 
-                value={isLoading ? "Loading..." : `$${formatBigInt(stats?.totalTvlUsd)}`} 
+                value={areStatsLoading ? "Loading..." : `$${formatBigInt(stats?.totalTvlUsd)}`} 
               />
               <StatCard 
                 label="DSC Supply" 
-                value={isLoading ? "Loading..." : `${(dscSupply / 1000).toFixed(1)}k`} 
+                value={areStatsLoading ? "Loading..." : `${(dscSupply / 1000).toFixed(1)}k`} 
               />
               <StatCard 
                 label="ETH Price" 
-                value={isLoading ? "Loading..." : `$${ethPrice.toLocaleString()}`} 
+                value={areStatsLoading ? "Loading..." : `$${ethPrice.toLocaleString()}`} 
               />
               <StatCard 
                 label="Collateral Ratio" 
-                value={isLoading ? "Loading..." : `${ratio}%`} 
+                value={areStatsLoading ? "Loading..." : `${ratio}%`} 
                 // Optional: change color based on health
                 // className={ratio < 150 ? "text-red-400" : "text-emerald-400"}
               />
