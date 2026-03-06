@@ -12,6 +12,11 @@ import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Rectangle } from 'recharts';
 
+// @ts-ignore: Adding toJSON to BigInt prototype
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 const Home: NextPage = () => {
   const { address, isConnected } = useAccount();
 
@@ -162,13 +167,33 @@ const Home: NextPage = () => {
 
   // Mock data representing how many users/positions are at various health factors.
   // A health factor < 1.0 means they are undercollateralized and liquidatable.
-  const healthDistributionData = [
-    { range: '< 1.0', users: 2, fill: '#ef4444' },    // Danger: Red-500
-    { range: '1.0 - 1.2', users: 12, fill: '#f59e0b' }, // Warning: Amber-500
-    { range: '1.2 - 1.5', users: 28, fill: '#10b981' }, // Safe: Emerald-500
-    { range: '1.5 - 2.0', users: 45, fill: '#34d399' }, // Very Safe: Emerald-400
-    { range: '2.0+', users: 31, fill: '#6ee7b7' },      // Overcollateralized: Emerald-300
-  ];
+  // const healthDistributionData = [
+  //   { range: '< 1.0', users: 2, fill: '#ef4444' },    // Danger: Red-500
+  //   { range: '1.0 - 1.2', users: 12, fill: '#f59e0b' }, // Warning: Amber-500
+  //   { range: '1.2 - 1.5', users: 28, fill: '#10b981' }, // Safe: Emerald-500
+  //   { range: '1.5 - 2.0', users: 45, fill: '#34d399' }, // Very Safe: Emerald-400
+  //   { range: '2.0+', users: 31, fill: '#6ee7b7' },      // Overcollateralized: Emerald-300
+  // ];
+
+  const { data: distributionData, isLoading: isChartLoading } = useReadContract({
+    address: DSC_ENGINE_ADDRESS as `0x${string}`,
+    abi: DSC_ENGINE_ABI,
+    functionName: 'getHealthFactorDistribution',
+  });
+
+  // Map the raw uint256 array from Solidity to the Recharts format
+  const healthDistributionData = React.useMemo(() => {
+    if (!distributionData) return [];
+    
+    const labels = ['< 1.0', '1.0 - 1.2', '1.2 - 1.5', '1.5 - 2.0', '2.0+'];
+    const colors = ['#ef4444', '#f59e0b', '#10b981', '#34d399', '#6ee7b7'];
+
+    return (distributionData as bigint[]).map((count, index) => ({
+      range: labels[index],
+      users: Number(count),
+      fill: colors[index],
+    }));
+  }, [distributionData]);
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -315,7 +340,7 @@ const Home: NextPage = () => {
                       <img 
                         src="/images/InBug-White.png" 
                         alt="LinkedIn" 
-                        className="w-7 h-7 sm:w-8 sm:h-8 object-contain" // adjust size to match your design
+                        className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
                       />
                     </a>
                     

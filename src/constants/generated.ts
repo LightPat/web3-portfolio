@@ -148,6 +148,13 @@ export const DSC_ENGINE_ABI = [
   {
     type: 'function',
     inputs: [],
+    name: 'getHealthFactorDistribution',
+    outputs: [{ name: '', internalType: 'uint256[]', type: 'uint256[]' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
     name: 'getLiquidationBonus',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'pure',
