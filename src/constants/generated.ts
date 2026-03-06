@@ -134,6 +134,25 @@ export const DSC_ENGINE_ABI = [
   {
     type: 'function',
     inputs: [],
+    name: 'getGlobalProtocolStats',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct DSCEngine.ProtocolStats',
+        type: 'tuple',
+        components: [
+          { name: 'totalTvlUsd', internalType: 'uint256', type: 'uint256' },
+          { name: 'totalDscSupply', internalType: 'uint256', type: 'uint256' },
+          { name: 'ethPrice', internalType: 'uint256', type: 'uint256' },
+          { name: 'collateralRatio', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
     name: 'getHealthFactor',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',

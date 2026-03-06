@@ -165,16 +165,7 @@ const Home: NextPage = () => {
     }
   }, [isAllowanceUpdating]);
 
-  // Mock data representing how many users/positions are at various health factors.
   // A health factor < 1.0 means they are undercollateralized and liquidatable.
-  // const healthDistributionData = [
-  //   { range: '< 1.0', users: 2, fill: '#ef4444' },    // Danger: Red-500
-  //   { range: '1.0 - 1.2', users: 12, fill: '#f59e0b' }, // Warning: Amber-500
-  //   { range: '1.2 - 1.5', users: 28, fill: '#10b981' }, // Safe: Emerald-500
-  //   { range: '1.5 - 2.0', users: 45, fill: '#34d399' }, // Very Safe: Emerald-400
-  //   { range: '2.0+', users: 31, fill: '#6ee7b7' },      // Overcollateralized: Emerald-300
-  // ];
-
   const { data: distributionData, isLoading: isChartLoading } = useReadContract({
     address: DSC_ENGINE_ADDRESS as `0x${string}`,
     abi: DSC_ENGINE_ABI,
@@ -194,6 +185,30 @@ const Home: NextPage = () => {
       fill: colors[index],
     }));
   }, [distributionData]);
+
+  const { data: stats, isLoading: areStatsLoading } = useReadContract({
+    address: DSC_ENGINE_ADDRESS as `0x${string}`,
+    abi: DSC_ENGINE_ABI,
+    functionName: 'getGlobalProtocolStats',
+    query: {
+        refetchInterval: 10000, // Refresh every 10 seconds for that "Live" feel
+    }
+  });
+
+  // Helper to format BigInts safely
+  const formatBigInt = (val: bigint | undefined, decimals = 18) => {
+    if (!val) return "0.00";
+    return parseFloat(formatUnits(val, decimals)).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  // Logic for the stats
+  const tvl = stats ? parseFloat(formatUnits(stats.totalTvlUsd, 18)) : 0;
+  const dscSupply = stats ? parseFloat(formatUnits(stats.totalDscSupply, 18)) : 0;
+  const ethPrice = stats ? parseFloat(formatUnits(stats.ethPrice, 18)) : 0;
+  const ratio = stats ? Number(stats.collateralRatio) : 0;
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -475,10 +490,24 @@ const Home: NextPage = () => {
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <StatCard label="Total Value Locked" value="$1.24M" />
-              <StatCard label="DSC Supply" value="840.2k" />
-              <StatCard label="ETH Price" value="$2,450.00" />
-              <StatCard label="Collateral Ratio" value="154%" />
+              <StatCard 
+                label="Total Value Locked" 
+                value={isLoading ? "Loading..." : `$${formatBigInt(stats?.totalTvlUsd)}`} 
+              />
+              <StatCard 
+                label="DSC Supply" 
+                value={isLoading ? "Loading..." : `${(dscSupply / 1000).toFixed(1)}k`} 
+              />
+              <StatCard 
+                label="ETH Price" 
+                value={isLoading ? "Loading..." : `$${ethPrice.toLocaleString()}`} 
+              />
+              <StatCard 
+                label="Collateral Ratio" 
+                value={isLoading ? "Loading..." : `${ratio}%`} 
+                // Optional: change color based on health
+                // className={ratio < 150 ? "text-red-400" : "text-emerald-400"}
+              />
             </div>
 
             {/* Health Distribution Chart */}
