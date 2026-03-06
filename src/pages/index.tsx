@@ -142,18 +142,37 @@ const Home: NextPage = () => {
   // 4. PROTOCOL STATS & CHARTS
   // ────────────────────────────────────────────────
 
-  const { data: distributionData, isLoading: isChartLoading } = useReadContract({
+  // 1. Fetch the total number of users first
+  const { data: totalUserCount, isLoading: isCountLoading } = useReadContract({
+    address: DSC_ENGINE_ADDRESS as `0x${string}`,
+    abi: DSC_ENGINE_ABI,
+    functionName: 'getTotalUserCount',
+  });
+
+  // 2. Fetch the distribution using the count we just received
+  const { data: distributionData, isLoading: isDistLoading } = useReadContract({
     address: DSC_ENGINE_ADDRESS as `0x${string}`,
     abi: DSC_ENGINE_ABI,
     functionName: 'getHealthFactorDistribution',
+    // offset 0, limit is the total count (or a fixed safe limit like 500)
+    args: [0n, totalUserCount || 0n], 
+    query: {
+      enabled: totalUserCount !== undefined, // Only run once we have the count
+    },
   });
+
+  const isChartLoading = isCountLoading || isDistLoading;
 
   const healthDistributionData = React.useMemo(() => {
     if (!distributionData) return [];
+    
     const labels = ['< 1.0', '1.0 - 1.2', '1.2 - 1.5', '1.5 - 2.0', '2.0+'];
     const colors = ['#ef4444', '#f59e0b', '#10b981', '#34d399', '#6ee7b7'];
 
-    return (distributionData as bigint[]).map((count, index) => ({
+    // Cast distributionData to bigint array safely
+    const counts = distributionData as bigint[];
+
+    return counts.map((count, index) => ({
       range: labels[index],
       users: Number(count),
       fill: colors[index],

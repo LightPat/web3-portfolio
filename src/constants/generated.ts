@@ -166,7 +166,10 @@ export const DSC_ENGINE_ABI = [
   },
   {
     type: 'function',
-    inputs: [],
+    inputs: [
+      { name: 'offset', internalType: 'uint256', type: 'uint256' },
+      { name: 'limit', internalType: 'uint256', type: 'uint256' },
+    ],
     name: 'getHealthFactorDistribution',
     outputs: [{ name: '', internalType: 'uint256[]', type: 'uint256[]' }],
     stateMutability: 'view',
@@ -213,6 +216,13 @@ export const DSC_ENGINE_ABI = [
       { name: 'usdAmountInWei', internalType: 'uint256', type: 'uint256' },
     ],
     name: 'getTokenAmountFromUsd',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getTotalUserCount',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
   },
