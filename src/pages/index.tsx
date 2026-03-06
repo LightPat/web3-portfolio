@@ -20,162 +20,136 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Rectangle } 
 const Home: NextPage = () => {
   const { address, isConnected } = useAccount();
 
-  const { data, isLoading, error } = useReadContract({
+  // User inputs
+  const [depositAmount, setDepositAmount] = useState<string>(''); // e.g. "1.5"
+  const [mintAmount, setMintAmount] = useState<string>('');       // e.g. "750"
+
+  const depositWei = depositAmount ? parseUnits(depositAmount, 18) : 0n;
+  const mintWei = mintAmount ? parseUnits(mintAmount, 18) : 0n;
+
+  // ────────────────────────────────────────────────
+  // 1. READ CONTRACTS (Data Fetching)
+  // ────────────────────────────────────────────────
+  
+  const { data: accountData } = useReadContract({
     address: DSC_ENGINE_ADDRESS,
     abi: DSC_ENGINE_ABI,
     functionName: 'getAccountInformation',
-    args: [address!]
-  })
+    args: [address!],
+    query: { enabled: isConnected && !!address }
+  });
 
-  let totalDscMinted = 0n
-  let collateralValueInUsd = 0n
-
-  if (data) {
-    [totalDscMinted, collateralValueInUsd] = data
-  }
+  const [totalDscMinted = 0n, collateralValueInUsd = 0n] = accountData || [];
 
   const { data: healthFactorRaw } = useReadContract({
     address: DSC_ENGINE_ADDRESS,
     abi: DSC_ENGINE_ABI,
     functionName: 'getHealthFactor',
-    args: [address!]
-  })
+    args: [address!],
+    query: { enabled: isConnected && !!address }
+  });
 
   const healthFactor = healthFactorRaw 
     ? parseFloat(formatUnits(healthFactorRaw as bigint, 18)).toFixed(2) 
     : "0.00";
 
-  // User inputs (use controlled inputs instead of uncontrolled for real app)
-  const [depositAmount, setDepositAmount] = useState<string>('');     // e.g. "1.5"
-  const [mintAmount, setMintAmount] = useState<string>('');           // e.g. "750"
-
-  // Convert to wei (18 decimals — adjust if your WETH/DSC uses different)
-  const depositWei = depositAmount ? parseUnits(depositAmount, 18) : 0n;
-  const mintWei = mintAmount ? parseUnits(mintAmount,   18) : 0n;
-
-  // A. Read current allowance (WETH → DSCEngine)
   const { data: allowanceRaw, refetch: refetchAllowance } = useReadContract({
     address: WETH_ADDRESS,
-    abi: DECENTRALIZED_STABLE_COIN_ABI,
+    abi: DECENTRALIZED_STABLE_COIN_ABI, // Consider using standard erc20Abi here!
     functionName: 'allowance',
     args: [address!, DSC_ENGINE_ADDRESS],
-    // only query if connected + inputs exist
     query: { enabled: isConnected && !!address && depositWei > 0n },
   });
 
   const allowance = allowanceRaw ?? 0n;
 
-  // B. Prepare approve write
+  // ────────────────────────────────────────────────
+  // 2. WRITE CONTRACTS (Transactions)
+  // ────────────────────────────────────────────────
+
+  // A. Approve Flow
   const { 
     writeContract: writeApprove, 
-    isPending: isApproving,
-    data: approveTxHash 
+    isPending: isApprovingWallet, // True while Metamask popup is open
+    data: approveTxHash,
+    error: approveWriteError,
+    reset: resetApprove
   } = useWriteContract();
 
-  // C. Wait for approval confirmation
-  const { isSuccess: approveSuccess, isLoading: isConfirmingApproval } = useWaitForTransactionReceipt({
-    hash: approveTxHash,
-  });
+  const { 
+    isSuccess: approveSuccess, 
+    isLoading: isConfirmingApproval, // True while waiting for Anvil/Network to mine
+    isError: approveReceiptError
+  } = useWaitForTransactionReceipt({ hash: approveTxHash });
 
-  // D. Prepare depositAndMint write (only when we know allowance is enough)
+  // B. Mint Flow
   const { 
     writeContract: writeDepositAndMint, 
-    isPending: isMinting,
-    data: mintTxHash 
+    isPending: isMintingWallet, // True while Metamask popup is open
+    data: mintTxHash,
+    error: mintWriteError,
+    reset: resetMint
   } = useWriteContract();
 
-  // Optional: wait for mint tx too
-  const { isSuccess: mintSuccess, isLoading: isConfirmingMint } = useWaitForTransactionReceipt({
-    hash: mintTxHash,
-  });
+  const { 
+    isSuccess: mintSuccess, 
+    isLoading: isConfirmingMint, // True while waiting for Anvil/Network to mine
+    isError: mintReceiptError 
+  } = useWaitForTransactionReceipt({ hash: mintTxHash });
 
-  const [isApprovalPending, setIsApprovalPending] = useState(false);
-  const [isConsumptionPending, setIsConsumptionPending] = useState(false);
-  const isAllowanceUpdating = isApprovalPending || isConsumptionPending;
-
-  // NEW: Store snapshots when tx is SENT (not when mined)
-  const [preApprovalAllowance, setPreApprovalAllowance] = useState<bigint | null>(null);
-  const [preMintAllowance, setPreMintAllowance] = useState<bigint | null>(null);
+  // 2. Add the reset calls to your Error useEffect
+  useEffect(() => {
+    if (approveReceiptError || approveWriteError) {
+      console.error("Approval Failed");
+      resetApprove(); // Clears the hash, instantly killing the Wagmi polling loop
+    }
+    
+    if (mintReceiptError || mintWriteError) {
+      console.error("Mint Failed (Check Health Factor)");
+      resetMint(); // Clears the hash, instantly killing the Wagmi polling loop
+    }
+  }, [
+    approveReceiptError, approveWriteError, resetApprove, 
+    mintReceiptError, mintWriteError, resetMint
+  ]);
 
   // ────────────────────────────────────────────────
-  // APPROVAL FLOW
+  // 3. SIDE EFFECTS & STATE SYNC
   // ────────────────────────────────────────────────
-  useEffect(() => {
-    if (approveTxHash && !approveSuccess && allowance !== null) {
-      setIsApprovalPending(true);
-      setPreApprovalAllowance(allowance); // snapshot BEFORE mining
-    }
-  }, [approveTxHash, approveSuccess, allowance]);
 
+  // Sync Allowance after a successful transaction
   useEffect(() => {
-    if (approveSuccess) {
-      const interval = setInterval(() => {
-        refetchAllowance();
-        if (allowance > (preApprovalAllowance ?? 0n)) { // increased from snapshot
-          setIsApprovalPending(false);
-          setPreApprovalAllowance(null); // cleanup
-          clearInterval(interval);
-        }
-      }, 800); // slightly faster for local dev
-
-      return () => clearInterval(interval);
+    if (approveSuccess || mintSuccess) {
+      refetchAllowance();
+      // Optional: Clear inputs after a successful mint
+      if (mintSuccess) {
+        setDepositAmount('');
+        setMintAmount('');
+      }
     }
-  }, [approveSuccess, allowance, preApprovalAllowance, refetchAllowance]);
+  }, [approveSuccess, mintSuccess, refetchAllowance]);
+
+  // Log on-chain reverts for debugging
+  useEffect(() => {
+    if (approveReceiptError) console.error("Approval Reverted On-Chain");
+    if (mintReceiptError) console.error("Mint Reverted On-Chain (Check Health Factor)");
+  }, [approveReceiptError, mintReceiptError]);
+
+  // Derived UI State - This replaces all your custom states!
+  const isTxPending = isApprovingWallet || isConfirmingApproval || isMintingWallet || isConfirmingMint;
 
   // ────────────────────────────────────────────────
-  // MINT / DEPOSIT FLOW
+  // 4. PROTOCOL STATS & CHARTS
   // ────────────────────────────────────────────────
-  useEffect(() => {
-    if (mintTxHash && !mintSuccess && allowance !== null) {
-      setIsConsumptionPending(true);
-      setPreMintAllowance(allowance); // snapshot BEFORE mining
-    }
-  }, [mintTxHash, mintSuccess, allowance]);
 
-  useEffect(() => {
-    if (mintSuccess) {
-      const interval = setInterval(() => {
-        refetchAllowance();
-        if (
-          preMintAllowance !== null &&
-          allowance < preMintAllowance // decreased from snapshot
-        ) {
-          setIsConsumptionPending(false);
-          setPreMintAllowance(null); // cleanup
-          clearInterval(interval);
-        }
-      }, 800);
-
-      return () => clearInterval(interval);
-    }
-  }, [mintSuccess, allowance, preMintAllowance, refetchAllowance]);
-
-  // Safety net: force reset if stuck too long (e.g. 45s)
-  useEffect(() => {
-    if (isAllowanceUpdating) {
-      const safety = setTimeout(() => {
-        setIsApprovalPending(false);
-        setIsConsumptionPending(false);
-        setPreApprovalAllowance(null);
-        setPreMintAllowance(null);
-        console.warn("Allowance pending timeout - forced reset");
-      }, 45000);
-
-      return () => clearTimeout(safety);
-    }
-  }, [isAllowanceUpdating]);
-
-  // A health factor < 1.0 means they are undercollateralized and liquidatable.
   const { data: distributionData, isLoading: isChartLoading } = useReadContract({
     address: DSC_ENGINE_ADDRESS as `0x${string}`,
     abi: DSC_ENGINE_ABI,
     functionName: 'getHealthFactorDistribution',
   });
 
-  // Map the raw uint256 array from Solidity to the Recharts format
   const healthDistributionData = React.useMemo(() => {
     if (!distributionData) return [];
-    
     const labels = ['< 1.0', '1.0 - 1.2', '1.2 - 1.5', '1.5 - 2.0', '2.0+'];
     const colors = ['#ef4444', '#f59e0b', '#10b981', '#34d399', '#6ee7b7'];
 
@@ -190,12 +164,9 @@ const Home: NextPage = () => {
     address: DSC_ENGINE_ADDRESS as `0x${string}`,
     abi: DSC_ENGINE_ABI,
     functionName: 'getGlobalProtocolStats',
-    query: {
-        refetchInterval: 10000, // Refresh every 10 seconds for that "Live" feel
-    }
+    query: { refetchInterval: 10000 }
   });
 
-  // Helper to format BigInts safely
   const formatBigInt = (val: bigint | undefined, decimals = 18) => {
     if (!val) return "0.00";
     return parseFloat(formatUnits(val, decimals)).toLocaleString(undefined, {
@@ -204,7 +175,6 @@ const Home: NextPage = () => {
     });
   };
 
-  // Logic for the stats
   const tvl = stats ? parseFloat(formatUnits(stats.totalTvlUsd, 18)) : 0;
   const dscSupply = stats ? parseFloat(formatUnits(stats.totalDscSupply, 18)) : 0;
   const ethPrice = stats ? parseFloat(formatUnits(stats.ethPrice, 18)) : 0;
@@ -428,12 +398,11 @@ const Home: NextPage = () => {
                         args: [DSC_ENGINE_ADDRESS, depositWei * 110n / 100n], // slight buffer ~10%
                       })
                     }
-                    disabled={isApproving || isConfirmingApproval || isAllowanceUpdating || !isConnected}
+                    disabled={isTxPending || !isConnected}
                     className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-yellow-600/20 mt-2 disabled:opacity-50"
                   >
-                    {isApproving ? 'Waiting for wallet...' :
-                    isConfirmingApproval ? 'Confirming...' :
-                    isAllowanceUpdating ? "Updating allowance..." :
+                    {isApprovingWallet ? 'Check Wallet...' :
+                    isConfirmingApproval ? 'Approving WETH...' :
                     'Approve WETH'}
                   </button>
                 ) : (
@@ -446,12 +415,12 @@ const Home: NextPage = () => {
                         args: [WETH_ADDRESS, depositWei, mintWei],
                       })
                     }
-                    disabled={isMinting || isConfirmingMint || isAllowanceUpdating || !isConnected}
+                    disabled={isTxPending || !isConnected}
                     className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20 mt-2 disabled:opacity-50"
                   >
-                    {isMinting ? 'Processing...' :
-                    isConfirmingMint ? 'Confirming...' :
-                    isAllowanceUpdating ? "Updating allowance..." :
+                    {isMintingWallet ? 'Check Wallet...' :
+                    isConfirmingMint ? 'Minting DSC...' :
+                    mintWriteError ? 'Health Factor Too Low' : 
                     'DEPOSIT & MINT'}
                   </button>
                 )
