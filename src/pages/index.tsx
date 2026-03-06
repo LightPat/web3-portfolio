@@ -501,6 +501,7 @@ const Home: NextPage = () => {
                       fontFamily="monospace"
                     />
                     <YAxis 
+                      allowDecimals={false} 
                       stroke="#52525b" 
                       fontSize={12} 
                       tickLine={false} 
