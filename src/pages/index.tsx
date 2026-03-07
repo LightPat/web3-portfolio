@@ -263,7 +263,7 @@ const Home: NextPage = () => {
       {/* --- HEADER --- */}
       <header className="glass-header sticky top-0 z-20">
         {/* This div creates full-viewport-width black background */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">  {/* ← top/bottom padding here */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">  {/* Top/bottom padding here */}
           <div className="flex flex-wrap justify-between items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-2">
               <div>
@@ -271,7 +271,7 @@ const Home: NextPage = () => {
                 <p className="text-zinc-500 text-xs uppercase tracking-tighter">Stablecoin Protocol & Risk Analytics</p>
               </div>
 
-              {/* ← Help Popover here */}
+              {/* Help Popover here */}
               <Popover className="relative">
                 {({ open }) => (
                   <>
@@ -355,7 +355,7 @@ const Home: NextPage = () => {
         </div>
       </header>
 
-      {/* All your visible content – sits on top */}
+      {/* All your visible content – sits on top of animated background */}
       <div className={styles.container + " relative z-0"} style={{ paddingTop: '8px' }}>
         
         {/* --- MAIN BENTO GRID --- */}
@@ -494,10 +494,6 @@ const Home: NextPage = () => {
                   Enter amounts to continue
                 </button>
               )}
-
-              {/* Optional feedback */}
-              {/* {approveSuccess && <p className="text-green-400 text-sm mt-2">Approval successful! You can now mint.</p>}
-              {mintSuccess && <p className="text-green-400 text-sm mt-2">Deposit & Mint completed!</p>} */}
             </div>
           </div>
 
@@ -539,14 +535,11 @@ const Home: NextPage = () => {
               <StatCard 
                 label="Collateral Ratio" 
                 value={globalRatio === undefined ? "Loading..." : `${ratio}%`}
-                // Optional: change color based on health
-                // className={ratio < 150 ? "text-red-400" : "text-emerald-400"}
               />
             </div>
 
             {/* Health Distribution Chart */}
             <div className="mt-2 border border-dashed border-zinc-800 rounded-xl">
-              {/* FIX 3: Added 'text-center' to this header class */}
               <h4 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mt-2 mb-4 text-center">
                 System Health Distribution (Users)
               </h4>
@@ -584,11 +577,9 @@ const Home: NextPage = () => {
                         fontSize: '12px' 
                       }}
                       itemStyle={{ color: '#34d399', fontWeight: 'bold' }}
-                      // FIX 1: Updated type to number | undefined and added a fallback (value || 0)
                       formatter={(value: number | undefined) => [`${value || 0} Users`, 'Positions']}
                       labelStyle={{ color: '#d4d4d8', marginBottom: '4px' }}
                     />
-                    {/* FIX 2: Used shape prop with Rectangle instead of mapping Cell components */}
                     <Bar 
                       dataKey="users" 
                       shape={(props: any) => {
