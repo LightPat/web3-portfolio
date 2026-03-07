@@ -285,7 +285,7 @@ const Home: NextPage = () => {
       </Head>
 
       {/* Animated background layer – full screen, behind everything */}
-      <div className="fixed inset-0 bg-animated -z-10" />
+      <div className="fixed inset-0 min-h-[100dvh] bg-animated -z-10" />
 
       {/* --- HEADER --- */}
       <header className="glass-header sticky top-0 z-20">
