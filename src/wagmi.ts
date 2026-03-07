@@ -1,7 +1,6 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import {
-  sepolia,
-  foundry
+  sepolia
 } from 'wagmi/chains';
 
 export const config = getDefaultConfig({
@@ -9,7 +8,6 @@ export const config = getDefaultConfig({
   projectId: '448fcf93b2a9c65beeac097214c050d3',
   chains: [
     sepolia,
-    foundry,
     ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [sepolia] : []),
   ],
   ssr: true,

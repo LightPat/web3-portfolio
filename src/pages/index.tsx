@@ -5,7 +5,7 @@ import styles from '../styles/Home.module.css';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatUnits, parseUnits } from 'viem';
 import { DSC_ENGINE_ABI, DECENTRALIZED_STABLE_COIN_ABI } from '../constants/generated';
-import { DSC_ENGINE_ADDRESS, WETH_ADDRESS } from '../constants/constants';
+import { DSC_ENGINE_ADDRESS, DSC_ADDRESS, WETH_ADDRESS, WBTC_ADDRESS } from '../constants/constants';
 import { Popover, Transition, PopoverButton, PopoverPanel } from '@headlessui/react'
 import { Fragment, useState, useEffect } from 'react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
@@ -179,12 +179,59 @@ const Home: NextPage = () => {
     }));
   }, [distributionData]);
 
-  const { data: stats, isLoading: areStatsLoading } = useReadContract({
-    address: DSC_ENGINE_ADDRESS as `0x${string}`,
-    abi: DSC_ENGINE_ABI,
-    functionName: 'getGlobalProtocolStats',
-    query: { refetchInterval: 10000 }
+  const refetchInterval = 10000;
+
+  const tokenAddresses = [WETH_ADDRESS, WBTC_ADDRESS];
+  let totalCollateralValueUsd = undefined;
+  for (const tokenAddress of tokenAddresses) {
+    const { data: tokenBalance } = useReadContract({
+      address: tokenAddress as `0x${string}`,
+      abi: DECENTRALIZED_STABLE_COIN_ABI,
+      functionName: 'balanceOf',
+      args: [DSC_ENGINE_ADDRESS],
+      query : { refetchInterval: refetchInterval }
+    });
+    
+    const { data: usdValue } = useReadContract({
+      address: DSC_ENGINE_ADDRESS,
+      abi: DSC_ENGINE_ABI,
+      functionName: 'getUsdValue',
+      args: [tokenAddress as `0x${string}`, tokenBalance ?? 0n],
+      query : {
+        enabled: tokenBalance !== undefined,
+        refetchInterval: refetchInterval
+      }
+    });
+
+    if (usdValue !== undefined) {
+      if (totalCollateralValueUsd === undefined) {
+        totalCollateralValueUsd = 0n;
+      }
+      totalCollateralValueUsd += usdValue;
+    }
+  }
+
+  const { data: dscSupplyInWei } = useReadContract({
+    address: DSC_ADDRESS,
+    abi: DECENTRALIZED_STABLE_COIN_ABI,
+    functionName: 'totalSupply',
+    query: { refetchInterval: refetchInterval }
   });
+
+  const { data: wethPrice } = useReadContract({
+    address: DSC_ENGINE_ADDRESS,
+    abi: DSC_ENGINE_ABI,
+    functionName: 'getUsdValue',
+    args: [WETH_ADDRESS as `0x${string}`, 1n],
+    query: { refetchInterval: refetchInterval }
+  });
+
+  let globalRatio = undefined;
+  if (dscSupplyInWei !== undefined && totalCollateralValueUsd !== undefined) {
+    if (dscSupplyInWei > 0) {
+      globalRatio = (totalCollateralValueUsd * 100n) / dscSupplyInWei;
+    }
+  }
 
   const formatBigInt = (val: bigint | undefined, decimals = 18) => {
     if (!val) return "0.00";
@@ -194,10 +241,9 @@ const Home: NextPage = () => {
     });
   };
 
-  const tvl = stats ? parseFloat(formatUnits(stats.totalTvlUsd, 18)) : 0;
-  const dscSupply = stats ? parseFloat(formatUnits(stats.totalDscSupply, 18)) : 0;
-  const ethPrice = stats ? parseFloat(formatUnits(stats.ethPrice, 18)) : 0;
-  const ratio = stats ? Number(stats.collateralRatio) : 0;
+  const tvl = totalCollateralValueUsd ? parseFloat(formatUnits(totalCollateralValueUsd, 18)) : undefined;
+  const dscSupply = dscSupplyInWei ? parseFloat(formatUnits(dscSupplyInWei, 18)) : undefined;
+  const ratio = globalRatio ? Number(globalRatio) : undefined;
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -291,7 +337,7 @@ const Home: NextPage = () => {
             />
 
             <a
-              href="https://etherscan.io/address/YOUR_CONTRACT_ADDRESS_HERE"  // ← replace with real link
+              href="https://sepolia.etherscan.io/address/0x6aA0e5fD458D3c0BCfE55Fe51bA292f866CD2E74"
               target="_blank"
               rel="noopener noreferrer"
               className="
@@ -480,19 +526,19 @@ const Home: NextPage = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <StatCard 
                 label="Total Value Locked" 
-                value={areStatsLoading ? "Loading..." : `$${formatBigInt(stats?.totalTvlUsd)}`} 
+                value={totalCollateralValueUsd === undefined ? "Loading..." : `$${formatBigInt(totalCollateralValueUsd)}`}
               />
               <StatCard 
                 label="DSC Supply" 
-                value={areStatsLoading ? "Loading..." : `${(dscSupply / 1000).toFixed(1)}k`} 
+                value={dscSupply === undefined ? "Loading..." : `${(dscSupply).toFixed(4)}`}
               />
               <StatCard 
                 label="ETH Price" 
-                value={areStatsLoading ? "Loading..." : `$${ethPrice.toLocaleString()}`} 
+                value={wethPrice === undefined ? "Loading..." : `$${wethPrice.toLocaleString()}`}
               />
               <StatCard 
                 label="Collateral Ratio" 
-                value={areStatsLoading ? "Loading..." : `${ratio}%`} 
+                value={globalRatio === undefined ? "Loading..." : `${ratio}%`}
                 // Optional: change color based on health
                 // className={ratio < 150 ? "text-red-400" : "text-emerald-400"}
               />
