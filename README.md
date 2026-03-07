@@ -2,6 +2,10 @@
 This is a portfolio website that doubles as a front end for [my foundry defi stablecoin project](https://github.com/LightPat/foundry-defi-stablecoin)  
 [It is hosted at patrickseeman.com ↗](https://patrickseeman.com/)
 
+![Website-Screenshot](public/images/Web3-Portfolio-Screenshot.png)
+
+## Framework
+
 This is a [RainbowKit](https://rainbowkit.com) + [wagmi](https://wagmi.sh) + [Next.js](https://nextjs.org/) project bootstrapped with [`create-rainbowkit`](/packages/create-rainbowkit).
 
 ## Getting Started
