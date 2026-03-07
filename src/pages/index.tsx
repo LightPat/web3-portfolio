@@ -628,25 +628,25 @@ const Home: NextPage = () => {
               <ExperienceItem 
                 title="Research Data Scientist I" 
                 org="Cleveland Clinic" 
-                period="February 2026 - Present"
+                period="Feb 2026 - Present"
                 desc="Restructured data warehouse for more optimal queries and ease of use for clinical studies"
               />
               <ExperienceItem 
                 title="Lead Developer" 
                 org="GridLock Games" 
-                period="March 2023 - November 2025"
+                period="March 2023 - Nov 2025"
                 desc="Led cross-platform MMORPG development in an agile environment, ensuring on-time feature delivery and team coordination."
               />
               <ExperienceItem 
                 title="Data Scientist I" 
                 org="Cleveland Clinic"
-                period="September 2023 - February 2025"
+                period="Sep 2023 - Feb 2025"
                 desc="Built ML language model to extract structured data from pathology reports, improving data accessibility for research and clinical use."
               />
               <ExperienceItem 
                 title="Associate Data Scientist" 
                 org="Cleveland Clinic"
-                period="June 2022 - September 2023"
+                period="June 2022 - Sep 2023"
                 desc="Developed Python web app to automate clinical scheduling at Taussig Cancer Institute, reducing manual scheduling errors and staff time."
               />
               <ExperienceItem 
