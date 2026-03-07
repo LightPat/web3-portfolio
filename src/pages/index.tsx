@@ -2,12 +2,12 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatUnits, parseUnits } from 'viem';
 import { DSC_ENGINE_ABI, DECENTRALIZED_STABLE_COIN_ABI } from '../constants/generated';
-import { DSC_ENGINE_ADDRESS, DSC_ADDRESS, WETH_ADDRESS, WBTC_ADDRESS } from '../constants/constants';
+import { DSC_ENGINE_ADDRESS, DSC_ADDRESS, WETH_ADDRESS } from '../constants/constants';
 import { Popover, Transition, PopoverButton, PopoverPanel } from '@headlessui/react'
-import { Fragment, useState, useEffect } from 'react'
+import { Fragment, useState, useEffect, useMemo } from 'react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Rectangle } from 'recharts';
@@ -181,35 +181,62 @@ const Home: NextPage = () => {
 
   const refetchInterval = 10000;
 
-  const tokenAddresses = [WETH_ADDRESS, WBTC_ADDRESS];
-  let totalCollateralValueUsd = undefined;
-  for (const tokenAddress of tokenAddresses) {
-    const { data: tokenBalance } = useReadContract({
+  const tokenAddresses = [WETH_ADDRESS];
+
+  // 1. Batch fetch all token balances
+  const { data: balancesData } = useReadContracts({
+    contracts: tokenAddresses.map((tokenAddress) => ({
       address: tokenAddress as `0x${string}`,
       abi: DECENTRALIZED_STABLE_COIN_ABI,
       functionName: 'balanceOf',
       args: [DSC_ENGINE_ADDRESS],
-      query : { refetchInterval: refetchInterval }
-    });
-    
-    const { data: usdValue } = useReadContract({
-      address: DSC_ENGINE_ADDRESS,
-      abi: DSC_ENGINE_ABI,
-      functionName: 'getUsdValue',
-      args: [tokenAddress as `0x${string}`, tokenBalance ?? 0n],
-      query : {
-        enabled: tokenBalance !== undefined,
-        refetchInterval: refetchInterval
-      }
-    });
-
-    if (usdValue !== undefined) {
-      if (totalCollateralValueUsd === undefined) {
-        totalCollateralValueUsd = 0n;
-      }
-      totalCollateralValueUsd += usdValue;
+    })),
+    query: { 
+      refetchInterval: refetchInterval 
     }
-  }
+  });
+
+  // Check if all balances successfully loaded
+  const hasBalances = balancesData?.every((res) => res.status === 'success');
+
+  // 2. Batch fetch all USD values using the returned balances
+  const { data: usdValuesData } = useReadContracts({
+    // Only build the contract calls if we have the balances
+    contracts: hasBalances 
+      ? tokenAddresses.map((tokenAddress, index) => ({
+          address: DSC_ENGINE_ADDRESS as `0x${string}`,
+          abi: DSC_ENGINE_ABI,
+          functionName: 'getUsdValue',
+          args: [
+            tokenAddress as `0x${string}`, 
+            balancesData[index].result as bigint // Pass the balance we just fetched
+          ],
+        }))
+      : [],
+    query: {
+      enabled: !!hasBalances, // Wait for balances before running this hook
+      refetchInterval: refetchInterval
+    }
+  });
+
+  // 3. Aggregate the total USD value securely
+  const totalCollateralValueUsd = useMemo(() => {
+    if (!usdValuesData) return undefined;
+
+    let total = 0n;
+    
+    for (const item of usdValuesData) {
+      if (item.status === 'success' && item.result !== undefined) {
+        total += item.result as bigint;
+      } else {
+        // If any single fetch fails or is pending, return undefined 
+        // to avoid displaying an incomplete/inaccurate total
+        return undefined; 
+      }
+    }
+
+    return total;
+  }, [usdValuesData]);
 
   const { data: dscSupplyInWei } = useReadContract({
     address: DSC_ADDRESS,
