@@ -301,15 +301,15 @@ const Home: NextPage = () => {
                           </h3>
 
                           <p>
-                            Decentralized StableCoin (DSC) is an over-collateralized, decentralized stablecoin protocol built with Foundry.
+                            Decentralized StableCoin (DSC) is an over-collateralized, decentralized stablecoin protocol built with Foundry and inspired by DAI.
                           </p>
 
                           <ul className="space-y-2 text-zinc-400 text-xs leading-relaxed">
-                            <li>• Pegged to 1 USD via algorithmic mechanisms</li>
-                            <li>• Collateral: ETH, BTC wrappers, stable LP tokens</li>
-                            <li>• Liquidation engine with health factor monitoring</li>
+                            <li>• Pegged to 1 USD using chainlink price feeds and liquidation incentives</li>
+                            <li>• Exogenous collateral: wETH OR wBTC</li>
+                            <li>• Liquidation engine that uses health factor monitoring</li>
                             <li>• Risk analytics dashboard (TVL, collateral ratio, liquidation risk)</li>
-                            <li>Audited (or in progress) – use at your own risk</li>
+                            <li>• Security audit in progress - use at your own risk</li>
                           </ul>
 
                           <div className="pt-2 border-t border-zinc-700/50 text-center">
