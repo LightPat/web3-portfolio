@@ -1,16 +1,42 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import type { NextPage } from 'next';
-import Head from 'next/head';
-import styles from '../styles/Home.module.css';
-import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { formatUnits, parseUnits } from 'viem';
-import { DSC_ENGINE_ABI, DECENTRALIZED_STABLE_COIN_ABI } from '../constants/generated';
-import { DSC_ENGINE_ADDRESS, DSC_ADDRESS, WETH_ADDRESS } from '../constants/constants';
-import { Popover, Transition, PopoverButton, PopoverPanel } from '@headlessui/react'
-import { Fragment, useState, useEffect, useMemo } from 'react'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Rectangle } from 'recharts';
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import type { NextPage } from "next";
+import Head from "next/head";
+import styles from "../styles/Home.module.css";
+import {
+  useAccount,
+  useReadContract,
+  useReadContracts,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import { formatUnits, parseUnits } from "viem";
+import {
+  DSC_ENGINE_ABI,
+  DECENTRALIZED_STABLE_COIN_ABI,
+} from "../constants/generated";
+import {
+  DSC_ENGINE_ADDRESS,
+  DSC_ADDRESS,
+  WETH_ADDRESS,
+} from "../constants/constants";
+import {
+  Popover,
+  Transition,
+  PopoverButton,
+  PopoverPanel,
+} from "@headlessui/react";
+import { Fragment, useState, useEffect, useMemo } from "react";
+import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
+import React from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Rectangle,
+} from "recharts";
 
 // @ts-ignore: Adding toJSON to BigInt prototype
 (BigInt.prototype as any).toJSON = function () {
@@ -21,8 +47,8 @@ const Home: NextPage = () => {
   const { address, isConnected } = useAccount();
 
   // User inputs
-  const [depositAmount, setDepositAmount] = useState<string>(''); // e.g. "1.5"
-  const [mintAmount, setMintAmount] = useState<string>('');       // e.g. "750"
+  const [depositAmount, setDepositAmount] = useState<string>(""); // e.g. "1.5"
+  const [mintAmount, setMintAmount] = useState<string>(""); // e.g. "750"
 
   const depositWei = depositAmount ? parseUnits(depositAmount, 18) : 0n;
   const mintWei = mintAmount ? parseUnits(mintAmount, 18) : 0n;
@@ -30,13 +56,13 @@ const Home: NextPage = () => {
   // ────────────────────────────────────────────────
   // 1. READ CONTRACTS (Data Fetching)
   // ────────────────────────────────────────────────
-  
+
   const { data: accountData } = useReadContract({
     address: DSC_ENGINE_ADDRESS,
     abi: DSC_ENGINE_ABI,
-    functionName: 'getAccountInformation',
+    functionName: "getAccountInformation",
     args: [address!],
-    query: { enabled: isConnected && !!address }
+    query: { enabled: isConnected && !!address },
   });
 
   const [totalDscMinted = 0n, collateralValueInUsd = 0n] = accountData || [];
@@ -44,19 +70,19 @@ const Home: NextPage = () => {
   const { data: healthFactorRaw } = useReadContract({
     address: DSC_ENGINE_ADDRESS,
     abi: DSC_ENGINE_ABI,
-    functionName: 'getHealthFactor',
+    functionName: "getHealthFactor",
     args: [address!],
-    query: { enabled: isConnected && !!address }
+    query: { enabled: isConnected && !!address },
   });
 
-  const healthFactor = healthFactorRaw 
-    ? parseFloat(formatUnits(healthFactorRaw as bigint, 18)).toFixed(2) 
+  const healthFactor = healthFactorRaw
+    ? parseFloat(formatUnits(healthFactorRaw as bigint, 18)).toFixed(2)
     : "0.00";
 
   const { data: allowanceRaw, refetch: refetchAllowance } = useReadContract({
     address: WETH_ADDRESS,
     abi: DECENTRALIZED_STABLE_COIN_ABI, // Consider using standard erc20Abi here!
-    functionName: 'allowance',
+    functionName: "allowance",
     args: [address!, DSC_ENGINE_ADDRESS],
     query: { enabled: isConnected && !!address && depositWei > 0n },
   });
@@ -68,33 +94,33 @@ const Home: NextPage = () => {
   // ────────────────────────────────────────────────
 
   // A. Approve Flow
-  const { 
-    writeContract: writeApprove, 
+  const {
+    writeContract: writeApprove,
     isPending: isApprovingWallet, // True while Metamask popup is open
     data: approveTxHash,
     error: approveWriteError,
-    reset: resetApprove
+    reset: resetApprove,
   } = useWriteContract();
 
-  const { 
-    isSuccess: approveSuccess, 
+  const {
+    isSuccess: approveSuccess,
     isLoading: isConfirmingApproval, // True while waiting for Anvil/Network to mine
-    isError: approveReceiptError
+    isError: approveReceiptError,
   } = useWaitForTransactionReceipt({ hash: approveTxHash });
 
   // B. Mint Flow
-  const { 
-    writeContract: writeDepositAndMint, 
+  const {
+    writeContract: writeDepositAndMint,
     isPending: isMintingWallet, // True while Metamask popup is open
     data: mintTxHash,
     error: mintWriteError,
-    reset: resetMint
+    reset: resetMint,
   } = useWriteContract();
 
-  const { 
-    isSuccess: mintSuccess, 
+  const {
+    isSuccess: mintSuccess,
     isLoading: isConfirmingMint, // True while waiting for Anvil/Network to mine
-    isError: mintReceiptError 
+    isError: mintReceiptError,
   } = useWaitForTransactionReceipt({ hash: mintTxHash });
 
   // 2. Add the reset calls to your Error useEffect
@@ -103,14 +129,18 @@ const Home: NextPage = () => {
       console.error("Approval Failed");
       resetApprove(); // Clears the hash, instantly killing the Wagmi polling loop
     }
-    
+
     if (mintReceiptError || mintWriteError) {
       console.error("Mint Failed (Check Health Factor)");
       resetMint(); // Clears the hash, instantly killing the Wagmi polling loop
     }
   }, [
-    approveReceiptError, approveWriteError, resetApprove, 
-    mintReceiptError, mintWriteError, resetMint
+    approveReceiptError,
+    approveWriteError,
+    resetApprove,
+    mintReceiptError,
+    mintWriteError,
+    resetMint,
   ]);
 
   // ────────────────────────────────────────────────
@@ -123,8 +153,8 @@ const Home: NextPage = () => {
       refetchAllowance();
       // Optional: Clear inputs after a successful mint
       if (mintSuccess) {
-        setDepositAmount('');
-        setMintAmount('');
+        setDepositAmount("");
+        setMintAmount("");
       }
     }
   }, [approveSuccess, mintSuccess, refetchAllowance]);
@@ -132,11 +162,16 @@ const Home: NextPage = () => {
   // Log on-chain reverts for debugging
   useEffect(() => {
     if (approveReceiptError) console.error("Approval Reverted On-Chain");
-    if (mintReceiptError) console.error("Mint Reverted On-Chain (Check Health Factor)");
+    if (mintReceiptError)
+      console.error("Mint Reverted On-Chain (Check Health Factor)");
   }, [approveReceiptError, mintReceiptError]);
 
   // Derived UI State - This replaces all your custom states!
-  const isTxPending = isApprovingWallet || isConfirmingApproval || isMintingWallet || isConfirmingMint;
+  const isTxPending =
+    isApprovingWallet ||
+    isConfirmingApproval ||
+    isMintingWallet ||
+    isConfirmingMint;
 
   // ────────────────────────────────────────────────
   // 4. PROTOCOL STATS & CHARTS
@@ -146,16 +181,16 @@ const Home: NextPage = () => {
   const { data: totalUserCount, isLoading: isCountLoading } = useReadContract({
     address: DSC_ENGINE_ADDRESS as `0x${string}`,
     abi: DSC_ENGINE_ABI,
-    functionName: 'getTotalUserCount',
+    functionName: "getTotalUserCount",
   });
 
   // 2. Fetch the distribution using the count we just received
   const { data: distributionData, isLoading: isDistLoading } = useReadContract({
     address: DSC_ENGINE_ADDRESS as `0x${string}`,
     abi: DSC_ENGINE_ABI,
-    functionName: 'getHealthFactorDistribution',
+    functionName: "getHealthFactorDistribution",
     // offset 0, limit is the total count (or a fixed safe limit like 500)
-    args: [0n, totalUserCount || 0n], 
+    args: [0n, totalUserCount || 0n],
     query: {
       enabled: totalUserCount !== undefined, // Only run once we have the count
     },
@@ -165,9 +200,9 @@ const Home: NextPage = () => {
 
   const healthDistributionData = React.useMemo(() => {
     if (!distributionData) return [];
-    
-    const labels = ['< 1.0', '1.0 - 1.2', '1.2 - 1.5', '1.5 - 2.0', '2.0+'];
-    const colors = ['#ef4444', '#f59e0b', '#10b981', '#34d399', '#6ee7b7'];
+
+    const labels = ["< 1.0", "1.0 - 1.2", "1.2 - 1.5", "1.5 - 2.0", "2.0+"];
+    const colors = ["#ef4444", "#f59e0b", "#10b981", "#34d399", "#6ee7b7"];
 
     // Cast distributionData to bigint array safely
     const counts = distributionData as bigint[];
@@ -188,35 +223,35 @@ const Home: NextPage = () => {
     contracts: tokenAddresses.map((tokenAddress) => ({
       address: tokenAddress as `0x${string}`,
       abi: DECENTRALIZED_STABLE_COIN_ABI,
-      functionName: 'balanceOf',
+      functionName: "balanceOf",
       args: [DSC_ENGINE_ADDRESS],
     })),
-    query: { 
-      refetchInterval: refetchInterval 
-    }
+    query: {
+      refetchInterval: refetchInterval,
+    },
   });
 
   // Check if all balances successfully loaded
-  const hasBalances = balancesData?.every((res) => res.status === 'success');
+  const hasBalances = balancesData?.every((res) => res.status === "success");
 
   // 2. Batch fetch all USD values using the returned balances
   const { data: usdValuesData } = useReadContracts({
     // Only build the contract calls if we have the balances
-    contracts: hasBalances 
+    contracts: hasBalances
       ? tokenAddresses.map((tokenAddress, index) => ({
           address: DSC_ENGINE_ADDRESS as `0x${string}`,
           abi: DSC_ENGINE_ABI,
-          functionName: 'getUsdValue',
+          functionName: "getUsdValue",
           args: [
-            tokenAddress as `0x${string}`, 
-            balancesData[index].result as bigint // Pass the balance we just fetched
+            tokenAddress as `0x${string}`,
+            balancesData[index].result as bigint, // Pass the balance we just fetched
           ],
         }))
       : [],
     query: {
       enabled: !!hasBalances, // Wait for balances before running this hook
-      refetchInterval: refetchInterval
-    }
+      refetchInterval: refetchInterval,
+    },
   });
 
   // 3. Aggregate the total USD value securely
@@ -224,14 +259,14 @@ const Home: NextPage = () => {
     if (!usdValuesData) return undefined;
 
     let total = 0n;
-    
+
     for (const item of usdValuesData) {
-      if (item.status === 'success' && item.result !== undefined) {
+      if (item.status === "success" && item.result !== undefined) {
         total += item.result as bigint;
       } else {
-        // If any single fetch fails or is pending, return undefined 
+        // If any single fetch fails or is pending, return undefined
         // to avoid displaying an incomplete/inaccurate total
-        return undefined; 
+        return undefined;
       }
     }
 
@@ -241,16 +276,16 @@ const Home: NextPage = () => {
   const { data: dscSupplyInWei } = useReadContract({
     address: DSC_ADDRESS,
     abi: DECENTRALIZED_STABLE_COIN_ABI,
-    functionName: 'totalSupply',
-    query: { refetchInterval: refetchInterval }
+    functionName: "totalSupply",
+    query: { refetchInterval: refetchInterval },
   });
 
   const { data: wethPrice } = useReadContract({
     address: DSC_ENGINE_ADDRESS,
     abi: DSC_ENGINE_ABI,
-    functionName: 'getUsdValue',
+    functionName: "getUsdValue",
     args: [WETH_ADDRESS as `0x${string}`, 1n],
-    query: { refetchInterval: refetchInterval }
+    query: { refetchInterval: refetchInterval },
   });
 
   let globalRatio = undefined;
@@ -268,13 +303,16 @@ const Home: NextPage = () => {
     });
   };
 
-  const tvl = totalCollateralValueUsd ? parseFloat(formatUnits(totalCollateralValueUsd, 18)) : undefined;
-  const dscSupply = dscSupplyInWei ? parseFloat(formatUnits(dscSupplyInWei, 18)) : undefined;
+  const tvl = totalCollateralValueUsd
+    ? parseFloat(formatUnits(totalCollateralValueUsd, 18))
+    : undefined;
+  const dscSupply = dscSupplyInWei
+    ? parseFloat(formatUnits(dscSupplyInWei, 18))
+    : undefined;
   const ratio = globalRatio ? Number(globalRatio) : undefined;
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-
       <Head>
         <title>Web3 Portfolio</title>
         <meta
@@ -290,12 +328,18 @@ const Home: NextPage = () => {
       {/* --- HEADER --- */}
       <header className="glass-header sticky top-0 z-20">
         {/* This div creates full-viewport-width black background */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">  {/* Top/bottom padding here */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {" "}
+          {/* Top/bottom padding here */}
           <div className="flex flex-wrap justify-between items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-2">
               <div>
-                <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">DSC_TERMINAL_v1.0</h1>
-                <p className="text-zinc-500 text-xs uppercase tracking-tighter">Stablecoin Protocol & Risk Analytics</p>
+                <h1 className="text-xl font-bold tracking-widest text-indigo-500 font-mono">
+                  DSC_TERMINAL_v1.0
+                </h1>
+                <p className="text-zinc-500 text-xs uppercase tracking-tighter">
+                  Stablecoin Protocol & Risk Analytics
+                </p>
               </div>
 
               {/* Help Popover here */}
@@ -315,28 +359,44 @@ const Home: NextPage = () => {
                       leaveFrom="opacity-100 translate-y-0"
                       leaveTo="opacity-0 translate-y-1"
                     >
-                      <PopoverPanel className="
+                      <PopoverPanel
+                        className="
                         absolute left-1/2 -translate-x-1/2 mt-2 w-80 sm:w-96
                         border border-indigo-500/30 rounded-lg shadow-2xl
                         text-zinc-200 text-sm
                         overflow-hidden z-30
                         bg-zinc-950/95
-                      ">
+                      "
+                      >
                         <div className="p-5 space-y-4">
                           <h3 className="font-semibold text-indigo-400 text-base">
                             DSC Protocol Overview
                           </h3>
 
                           <p>
-                            Decentralized StableCoin (DSC) is an over-collateralized, decentralized stablecoin protocol built with Foundry and inspired by DAI.
+                            Decentralized StableCoin (DSC) is an
+                            over-collateralized, decentralized stablecoin
+                            protocol built with Foundry and inspired by DAI.
                           </p>
 
                           <ul className="space-y-2 text-zinc-400 text-xs leading-relaxed">
-                            <li>• Pegged to 1 USD using chainlink price feeds and liquidation incentives</li>
+                            <li>
+                              • Pegged to 1 USD using chainlink price feeds and
+                              liquidation incentives
+                            </li>
                             <li>• Exogenous collateral: wETH OR wBTC</li>
-                            <li>• Liquidation engine that uses health factor monitoring</li>
-                            <li>• Risk analytics dashboard (TVL, collateral ratio, liquidation risk)</li>
-                            <li>• Security audit in progress - use at your own risk</li>
+                            <li>
+                              • Liquidation engine that uses health factor
+                              monitoring
+                            </li>
+                            <li>
+                              • Risk analytics dashboard (TVL, collateral ratio,
+                              liquidation risk)
+                            </li>
+                            <li>
+                              • Security audit in progress - use at your own
+                              risk
+                            </li>
                           </ul>
 
                           <div className="pt-2 border-t border-zinc-700/50 text-center">
@@ -356,7 +416,7 @@ const Home: NextPage = () => {
                 )}
               </Popover>
             </div>
-            
+
             <ConnectButton
               showBalance={{ smallScreen: false, largeScreen: false }}
               chainStatus={{ smallScreen: "icon", largeScreen: "full" }}
@@ -383,11 +443,12 @@ const Home: NextPage = () => {
       </header>
 
       {/* All your visible content – sits on top of animated background */}
-      <div className={styles.container + " relative z-0"} style={{ paddingTop: '8px' }}>
-        
+      <div
+        className={styles.container + " relative z-0"}
+        style={{ paddingTop: "8px" }}
+      >
         {/* --- MAIN BENTO GRID --- */}
         <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 auto-rows-min">
-          
           {/* 1. IDENTITY BOX (Span 4) */}
           <div className="md:col-span-4 bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-between">
             <div>
@@ -400,12 +461,16 @@ const Home: NextPage = () => {
                     className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-full border-2 border-blue-500"
                   />
                 </div>
-                
-                <div className="min-w-0">
-                  <h2 className="text-2xl font-bold leading-tight">Patrick Seeman</h2>
-                  <p className="text-indigo-400 font-mono text-sm mt-0.5">Solidity Developer</p>
 
-                  {/* Social links – added here */}
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-bold leading-tight">
+                    Patrick Seeman
+                  </h2>
+                  <p className="text-indigo-400 font-mono text-sm mt-0.5">
+                    Solidity Developer
+                  </p>
+
+                  {/* Social links */}
                   <div className="flex gap-3 mt-3">
                     <a
                       href="https://www.linkedin.com/in/patrick-seeman-5842841a0/"
@@ -414,13 +479,13 @@ const Home: NextPage = () => {
                       className="text-gray-400 hover:text-blue-500 transition-colors"
                       aria-label="LinkedIn profile"
                     >
-                      <img 
-                        src="/images/InBug-White.png" 
-                        alt="LinkedIn" 
+                      <img
+                        src="/images/InBug-White.png"
+                        alt="LinkedIn"
                         className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
                       />
                     </a>
-                    
+
                     <a
                       href="https://github.com/LightPat"
                       target="_blank"
@@ -428,26 +493,89 @@ const Home: NextPage = () => {
                       className="text-gray-400 hover:text-gray-200 transition-colors"
                       aria-label="GitHub profile"
                     >
-                      <img 
-                        src="/images/GitHub_Invertocat_White.png" 
-                        alt="GitHub" 
+                      <img
+                        src="/images/GitHub_Invertocat_White.png"
+                        alt="GitHub"
                         className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
                       />
+                    </a>
+
+                    <a
+                      href="https://calendly.com/patseem189/intro-call"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-400/70 hover:border-emerald-400 rounded-2xl text-emerald-400 font-medium text-sm transition-all duration-200"
+                      aria-label="Book intro call"
+                    >
+                      📅{" "}
+                      <span className="font-mono tracking-widest text-xs">
+                        BOOK CALL
+                      </span>
                     </a>
                   </div>
                 </div>
               </div>
-              <p className="text-indigo-400 font-mono text-sm">Smart Contract Engineer | Solidity & Foundry</p>
+              <p className="text-indigo-400 font-mono text-sm">
+                Smart Contract Engineer | Solidity & Foundry
+              </p>
               <p className="text-zinc-400 mt-4 text-sm leading-relaxed">
-                Building secure smart contracts & DeFi protocols. Foundry expert with hands-on projects in stablecoins and NFT collections. Background in high-stakes data engineering and ML at Cleveland Clinic.
+                Building secure smart contracts & DeFi protocols. Foundry expert
+                with hands-on projects in stablecoins and NFT collections.
+                Background in high-stakes data engineering and ML at Cleveland
+                Clinic.
               </p>
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="https://github.com/LightPat/foundry-defi-stablecoin" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Solidity</span></a>
-              <a href="https://www.getfoundry.sh/" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Foundry</span></a>
-              <a href="https://github.com/LightPat/Mobilenet-Image-Classification" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">Python</span></a>
-              <a href="https://play.google.com/store/apps/details?id=com.GridlockGames.ViTheGame&hl=en_US" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">C#</span></a>
-              <a href="https://aws.amazon.com/what-is/sql/" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">SQL</span></a>
+              <a
+                href="https://github.com/LightPat/foundry-defi-stablecoin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block hover:opacity-90 transition-opacity"
+              >
+                <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">
+                  Solidity
+                </span>
+              </a>
+              <a
+                href="https://www.getfoundry.sh/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block hover:opacity-90 transition-opacity"
+              >
+                <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">
+                  Foundry
+                </span>
+              </a>
+              <a
+                href="https://github.com/LightPat/Mobilenet-Image-Classification"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block hover:opacity-90 transition-opacity"
+              >
+                <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">
+                  Python
+                </span>
+              </a>
+              <a
+                href="https://play.google.com/store/apps/details?id=com.GridlockGames.ViTheGame&hl=en_US"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block hover:opacity-90 transition-opacity"
+              >
+                <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">
+                  C#
+                </span>
+              </a>
+              <a
+                href="https://aws.amazon.com/what-is/sql/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block hover:opacity-90 transition-opacity"
+              >
+                <span className="px-3 py-1 bg-zinc-800 rounded-full text-xs border border-zinc-700">
+                  SQL
+                </span>
+              </a>
             </div>
           </div>
 
@@ -459,21 +587,25 @@ const Home: NextPage = () => {
             </h3>
             <div className="space-y-4">
               <div className="group">
-                <label className="text-[10px] text-zinc-500 uppercase ml-1">Deposit WETH</label>
-                <input 
-                  type="number" 
-                  className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg" 
-                  placeholder="0.00" 
+                <label className="text-[10px] text-zinc-500 uppercase ml-1">
+                  Deposit WETH
+                </label>
+                <input
+                  type="number"
+                  className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg"
+                  placeholder="0.00"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
                 />
               </div>
               <div>
-                <label className="text-[10px] text-zinc-500 uppercase ml-1">Mint DSC</label>
-                <input 
-                  type="number" 
-                  className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg" 
-                  placeholder="0.00" 
+                <label className="text-[10px] text-zinc-500 uppercase ml-1">
+                  Mint DSC
+                </label>
+                <input
+                  type="number"
+                  className="w-full bg-black border border-zinc-800 p-4 rounded-xl mt-1 focus:border-indigo-500 transition-all outline-none font-mono text-lg"
+                  placeholder="0.00"
                   value={mintAmount}
                   onChange={(e) => setMintAmount(e.target.value)}
                 />
@@ -482,42 +614,50 @@ const Home: NextPage = () => {
               {depositWei > 0n && mintWei > 0n ? (
                 allowance < depositWei ? (
                   <button
-                    onClick={() => 
+                    onClick={() =>
                       writeApprove({
                         address: WETH_ADDRESS,
                         abi: DECENTRALIZED_STABLE_COIN_ABI,
-                        functionName: 'approve',
-                        args: [DSC_ENGINE_ADDRESS, depositWei * 110n / 100n], // slight buffer ~10%
+                        functionName: "approve",
+                        args: [DSC_ENGINE_ADDRESS, (depositWei * 110n) / 100n], // slight buffer ~10%
                       })
                     }
                     disabled={isTxPending || !isConnected}
                     className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-yellow-600/20 mt-2 disabled:opacity-50"
                   >
-                    {isApprovingWallet ? 'Check Wallet...' :
-                    isConfirmingApproval ? 'Approving WETH...' :
-                    'Approve WETH'}
+                    {isApprovingWallet
+                      ? "Check Wallet..."
+                      : isConfirmingApproval
+                        ? "Approving WETH..."
+                        : "Approve WETH"}
                   </button>
                 ) : (
                   <button
-                    onClick={() => 
+                    onClick={() =>
                       writeDepositAndMint({
                         address: DSC_ENGINE_ADDRESS,
-                        abi: DSC_ENGINE_ABI,           // your full engine ABI
-                        functionName: 'depositCollateralAndMintDsc',
+                        abi: DSC_ENGINE_ABI, // your full engine ABI
+                        functionName: "depositCollateralAndMintDsc",
                         args: [WETH_ADDRESS, depositWei, mintWei],
                       })
                     }
                     disabled={isTxPending || !isConnected}
                     className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20 mt-2 disabled:opacity-50"
                   >
-                    {isMintingWallet ? 'Check Wallet...' :
-                    isConfirmingMint ? 'Minting DSC...' :
-                    mintWriteError ? 'Health Factor Too Low' : 
-                    'DEPOSIT & MINT'}
+                    {isMintingWallet
+                      ? "Check Wallet..."
+                      : isConfirmingMint
+                        ? "Minting DSC..."
+                        : mintWriteError
+                          ? "Health Factor Too Low"
+                          : "DEPOSIT & MINT"}
                   </button>
                 )
               ) : (
-                <button disabled className="w-full bg-zinc-700 text-zinc-400 font-bold py-4 rounded-xl mt-2 cursor-not-allowed">
+                <button
+                  disabled
+                  className="w-full bg-zinc-700 text-zinc-400 font-bold py-4 rounded-xl mt-2 cursor-not-allowed"
+                >
                   Enter amounts to continue
                 </button>
               )}
@@ -526,15 +666,26 @@ const Home: NextPage = () => {
 
           {/* 3. QUICK HEALTH STAT (Span 3) */}
           <div className="md:col-span-3 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-center items-center text-center">
-            <h3 className="text-[10px] text-zinc-500 uppercase mb-4 tracking-[0.2em]">Account_Safety</h3>
-            <div className={`text-5xl font-mono font-bold ${Number(healthFactor) > 1.5 && totalDscMinted > 0 ? 'text-emerald-500' : 'text-amber-500'}`}>
+            <h3 className="text-[10px] text-zinc-500 uppercase mb-4 tracking-[0.2em]">
+              Account_Safety
+            </h3>
+            <div
+              className={`text-5xl font-mono font-bold ${Number(healthFactor) > 1.5 && totalDscMinted > 0 ? "text-emerald-500" : "text-amber-500"}`}
+            >
               {isConnected && totalDscMinted > 0 ? healthFactor : "---"}
             </div>
-            <p className="text-zinc-500 text-[10px] mt-2 font-mono">Health Factor</p>
+            <p className="text-zinc-500 text-[10px] mt-2 font-mono">
+              Health Factor
+            </p>
             <div className="w-full bg-zinc-800 h-1.5 mt-6 rounded-full overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-1000 ${Number(healthFactor) > 1.5 && totalDscMinted > 0 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
-                style={{ width: isConnected && totalDscMinted > 0 ? `${Math.min(Number(healthFactor) * 20, 100)}%` : '0%' }}
+              <div
+                className={`h-full transition-all duration-1000 ${Number(healthFactor) > 1.5 && totalDscMinted > 0 ? "bg-emerald-500" : "bg-amber-500"}`}
+                style={{
+                  width:
+                    isConnected && totalDscMinted > 0
+                      ? `${Math.min(Number(healthFactor) * 20, 100)}%`
+                      : "0%",
+                }}
               ></div>
             </div>
           </div>
@@ -542,25 +693,41 @@ const Home: NextPage = () => {
           {/* 4. ANALYTICS DASHBOARD (Span 8) */}
           <div className="md:col-span-8 bg-zinc-900/30 border border-zinc-800 p-6 rounded-2xl min-h-[300px]">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-sm font-mono text-emerald-400 uppercase tracking-widest">Protocol_Metrics</h3>
-              <div className="text-[10px] text-zinc-500 font-mono">LIVE_ANVIL_FEED</div>
+              <h3 className="text-sm font-mono text-emerald-400 uppercase tracking-widest">
+                Protocol_Metrics
+              </h3>
+              <div className="text-[10px] text-zinc-500 font-mono">
+                LIVE_ANVIL_FEED
+              </div>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <StatCard 
-                label="Total Value Locked" 
-                value={totalCollateralValueUsd === undefined ? "Loading..." : `$${formatBigInt(totalCollateralValueUsd)}`}
+              <StatCard
+                label="Total Value Locked"
+                value={
+                  totalCollateralValueUsd === undefined
+                    ? "Loading..."
+                    : `$${formatBigInt(totalCollateralValueUsd)}`
+                }
               />
-              <StatCard 
-                label="DSC Supply" 
-                value={dscSupply === undefined ? "Loading..." : `${(dscSupply).toFixed(4)}`}
+              <StatCard
+                label="DSC Supply"
+                value={
+                  dscSupply === undefined
+                    ? "Loading..."
+                    : `${dscSupply.toFixed(4)}`
+                }
               />
-              <StatCard 
-                label="ETH Price" 
-                value={wethPrice === undefined ? "Loading..." : `$${wethPrice.toLocaleString()}`}
+              <StatCard
+                label="ETH Price"
+                value={
+                  wethPrice === undefined
+                    ? "Loading..."
+                    : `$${wethPrice.toLocaleString()}`
+                }
               />
-              <StatCard 
-                label="Collateral Ratio" 
+              <StatCard
+                label="Collateral Ratio"
                 value={globalRatio === undefined ? "Loading..." : `${ratio}%`}
               />
             </div>
@@ -570,50 +737,59 @@ const Home: NextPage = () => {
               <h4 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mt-2 mb-4 text-center">
                 System Health Distribution (Users)
               </h4>
-              
+
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart 
-                    data={healthDistributionData} 
+                  <BarChart
+                    data={healthDistributionData}
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                   >
-                    <XAxis 
-                      dataKey="range" 
-                      stroke="#52525b" 
-                      fontSize={12} 
-                      tickLine={false} 
-                      axisLine={false} 
+                    <XAxis
+                      dataKey="range"
+                      stroke="#52525b"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
                       fontFamily="monospace"
                     />
-                    <YAxis 
-                      allowDecimals={false} 
-                      stroke="#52525b" 
-                      fontSize={12} 
-                      tickLine={false} 
+                    <YAxis
+                      allowDecimals={false}
+                      stroke="#52525b"
+                      fontSize={12}
+                      tickLine={false}
                       axisLine={false}
-                      fontFamily="monospace" 
+                      fontFamily="monospace"
                     />
                     <Tooltip
-                      cursor={{ fill: '#27272a', opacity: 0.4 }}
-                      contentStyle={{ 
-                        backgroundColor: '#18181b',
-                        borderColor: '#27272a',    
-                        borderRadius: '12px', 
-                        color: '#a1a1aa',          
-                        fontFamily: 'monospace',
-                        fontSize: '12px' 
+                      cursor={{ fill: "#27272a", opacity: 0.4 }}
+                      contentStyle={{
+                        backgroundColor: "#18181b",
+                        borderColor: "#27272a",
+                        borderRadius: "12px",
+                        color: "#a1a1aa",
+                        fontFamily: "monospace",
+                        fontSize: "12px",
                       }}
-                      itemStyle={{ color: '#34d399', fontWeight: 'bold' }}
-                      formatter={(value: number | undefined) => [`${value || 0} Users`, 'Positions']}
-                      labelStyle={{ color: '#d4d4d8', marginBottom: '4px' }}
+                      itemStyle={{ color: "#34d399", fontWeight: "bold" }}
+                      formatter={(value: number | undefined) => [
+                        `${value || 0} Users`,
+                        "Positions",
+                      ]}
+                      labelStyle={{ color: "#d4d4d8", marginBottom: "4px" }}
                     />
-                    <Bar 
-                      dataKey="users" 
+                    <Bar
+                      dataKey="users"
                       shape={(props: any) => {
                         // Destructure payload to get our custom fill color, pass the rest to Rectangle
                         const { payload, ...rest } = props;
-                        return <Rectangle {...rest} fill={payload.fill} radius={[4, 4, 0, 0]} />;
-                      }} 
+                        return (
+                          <Rectangle
+                            {...rest}
+                            fill={payload.fill}
+                            radius={[4, 4, 0, 0]}
+                          />
+                        );
+                      }}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -623,39 +799,136 @@ const Home: NextPage = () => {
 
           {/* 5. EXPERIENCE LOG (Span 4) */}
           <div className="md:col-span-4 bg-zinc-900/30 border border-zinc-800 p-6 rounded-2xl">
-            <h3 className="text-sm font-mono text-zinc-400 mb-6 uppercase tracking-widest">Experience_Log</h3>
+            <h3 className="text-sm font-mono text-zinc-400 mb-6 uppercase tracking-widest">
+              Experience_Log
+            </h3>
             <ul className="space-y-6">
-              <ExperienceItem 
-                title="Research Data Scientist I" 
-                org="Cleveland Clinic" 
+              <ExperienceItem
+                title="Research Data Scientist I"
+                org="Cleveland Clinic"
                 period="Feb 2026 - Present"
                 desc="Restructured data warehouse for more optimal queries and ease of use for clinical studies"
               />
-              <ExperienceItem 
-                title="Lead Developer" 
-                org="GridLock Games" 
+              <ExperienceItem
+                title="Lead Developer"
+                org="GridLock Games"
                 period="March 2023 - Nov 2025"
                 desc="Led cross-platform MMORPG development in an agile environment, ensuring on-time feature delivery and team coordination."
               />
-              <ExperienceItem 
-                title="Data Scientist I" 
+              <ExperienceItem
+                title="Data Scientist I"
                 org="Cleveland Clinic"
                 period="Sep 2023 - Feb 2025"
                 desc="Built ML language model to extract structured data from pathology reports, improving data accessibility for research and clinical use."
               />
-              <ExperienceItem 
-                title="Associate Data Scientist" 
+              <ExperienceItem
+                title="Associate Data Scientist"
                 org="Cleveland Clinic"
                 period="June 2022 - Sep 2023"
                 desc="Developed Python web app to automate clinical scheduling at Taussig Cancer Institute, reducing manual scheduling errors and staff time."
               />
-              <ExperienceItem 
-                title="Machine Learning Intern" 
+              <ExperienceItem
+                title="Machine Learning Intern"
                 org="Cleveland Clinic"
                 period="May 2021 - May 2022"
                 desc="Implemented Python/TensorFlow pipelines for image recognition models, training neural networks on 51,000 insurance card images."
               />
             </ul>
+          </div>
+
+          {/* === NEW: FEATURED PROJECTS SECTION === */}
+          <div className="md:col-span-12 mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-mono text-indigo-400 tracking-[2px]">
+                FEATURED_PROJECTS
+              </h2>
+              <div className="h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent flex-1 mx-6"></div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* DSC Stablecoin card (keeps your current project front-and-center) */}
+              <div className="bg-zinc-900/50 border border-zinc-700 p-6 rounded-3xl hover:border-emerald-400/30 transition-colors group">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">🪙</span>
+                  <div>
+                    <h3 className="text-xl font-bold text-emerald-400">
+                      DSC_TERMINAL_v1.0
+                    </h3>
+                    <p className="text-zinc-400 text-sm font-mono">
+                      Decentralized Stablecoin Protocol
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-6 text-zinc-300 text-sm leading-relaxed">
+                  Overcollateralized stablecoin (wETH) with Chainlink oracles,
+                  liquidation engine, and live risk analytics.
+                </p>
+                <div className="mt-8 flex items-center justify-between">
+                  <span className="px-5 py-2 bg-emerald-950 text-emerald-400 text-xs font-mono rounded-2xl border border-emerald-400/30">
+                    CURRENTLY POWERING THIS TERMINAL
+                  </span>
+                  <a
+                    href="https://github.com/lightpat/foundry-defi-stablecoin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-zinc-400 hover:text-white flex items-center gap-1"
+                  >
+                    REPO <span className="text-lg leading-none">→</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* FRAGBOX card – new & highlighted */}
+              <div className="bg-zinc-900/50 border border-rose-400/30 hover:border-rose-400 p-6 rounded-3xl transition-all group relative overflow-hidden">
+                <div className="absolute top-6 right-6 px-4 py-1 text-xs font-mono bg-rose-500/10 text-rose-400 rounded-2xl border border-rose-400/30">
+                  NEW
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">🎮</span>
+                  <div>
+                    <h3 className="text-xl font-bold">FRAGBOX</h3>
+                    <p className="text-zinc-400 text-sm font-mono">
+                      CS2 Faceit Betting • Base
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-6 text-zinc-300 text-sm leading-relaxed">
+                  Decentralized USDC escrow betting for Faceit pickup matches
+                  (1v1 &amp; 5v5). Faceit API verification, pro-rata payouts, 1%
+                  house fee, emergency refunds.
+                </p>
+
+                <a
+                  href="https://www.fragbox.gg"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-8 block w-full py-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-medium text-center rounded-3xl text-lg tracking-widest transition-all group-hover:scale-[1.02]"
+                >
+                  SECURE THE BOX →
+                </a>
+
+                <div className="mt-6 flex gap-6 text-xs">
+                  <a
+                    href="https://github.com/Fragbox-gg/fragbox-contracts"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-zinc-400 hover:text-white flex items-center gap-1"
+                  >
+                    CONTRACTS <span className="text-lg leading-none">→</span>
+                  </a>
+                  <a
+                    href="https://github.com/Fragbox-gg/fragbox-web"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-zinc-400 hover:text-white flex items-center gap-1"
+                  >
+                    FRONTEND <span className="text-lg leading-none">→</span>
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
 
@@ -668,7 +941,7 @@ const Home: NextPage = () => {
 };
 
 // Small helper components to keep code clean
-function StatCard({ label, value }: { label: string, value: string }) {
+function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-black/40 border border-zinc-800 p-3 rounded-lg">
       <div className="text-[9px] text-zinc-500 uppercase mb-1">{label}</div>
@@ -677,27 +950,31 @@ function StatCard({ label, value }: { label: string, value: string }) {
   );
 }
 
-function ExperienceItem({ title, org, period, desc }: { title: string, org: string, period: string, desc: string }) {
+function ExperienceItem({
+  title,
+  org,
+  period,
+  desc,
+}: {
+  title: string;
+  org: string;
+  period: string;
+  desc: string;
+}) {
   return (
-    <div className="border-l-2 border-zinc-800 pl-4 pb-1"> {/* pb-1 optional – breathing room between items */}
+    <div className="border-l-2 border-zinc-800 pl-4 pb-1">
+      {" "}
+      {/* pb-1 optional – breathing room between items */}
       <div className="flex justify-between items-baseline gap-4">
-        <div className="text-sm font-semibold text-zinc-100">
-          {title}
-        </div>
+        <div className="text-sm font-semibold text-zinc-100">{title}</div>
         <div className="text-[13px] text-zinc-500 font-medium shrink-0 whitespace-nowrap">
           {period}
         </div>
       </div>
-
       {/* Organization on its own line – lighter & smaller */}
-      <div className="text-[12px] text-zinc-400 mt-0.5 mb-1.5">
-        {org}
-      </div>
-
+      <div className="text-[12px] text-zinc-400 mt-0.5 mb-1.5">{org}</div>
       {desc && (
-        <div className="text-[11px] text-zinc-400 leading-relaxed">
-          {desc}
-        </div>
+        <div className="text-[11px] text-zinc-400 leading-relaxed">{desc}</div>
       )}
     </div>
   );
