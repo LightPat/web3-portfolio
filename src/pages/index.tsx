@@ -836,7 +836,7 @@ const Home: NextPage = () => {
             </ul>
           </div>
 
-          {/* === NEW: FEATURED PROJECTS SECTION === */}
+          {/* FEATURED PROJECTS SECTION */}
           <div className="md:col-span-12 mt-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-mono text-indigo-400 tracking-[2px]">
@@ -845,8 +845,8 @@ const Home: NextPage = () => {
               <div className="h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent flex-1 mx-6"></div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* DSC Stablecoin card (keeps your current project front-and-center) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* DSC Stablecoin card */}
               <div className="bg-zinc-900/50 border border-zinc-700 p-6 rounded-3xl hover:border-emerald-400/30 transition-colors group">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🪙</span>
@@ -878,7 +878,7 @@ const Home: NextPage = () => {
                 </div>
               </div>
 
-              {/* FRAGBOX card – new & highlighted */}
+              {/* FRAGBOX card */}
               <div className="bg-zinc-900/50 border border-rose-400/30 hover:border-rose-400 p-6 rounded-3xl transition-all group relative overflow-hidden">
                 <div className="absolute top-6 right-6 px-4 py-1 text-xs font-mono bg-rose-500/10 text-rose-400 rounded-2xl border border-rose-400/30">
                   NEW
@@ -925,6 +925,40 @@ const Home: NextPage = () => {
                     className="text-zinc-400 hover:text-white flex items-center gap-1"
                   >
                     FRONTEND <span className="text-lg leading-none">→</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* WEB3 SECURITY AUDITS card */}
+              <div className="bg-zinc-900/50 border border-amber-400/30 hover:border-amber-400 p-6 rounded-3xl transition-all group">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">🔍</span>
+                  <div>
+                    <h3 className="text-xl font-bold text-amber-400">
+                      WEB3_SECURITY_AUDITS
+                    </h3>
+                    <p className="text-zinc-400 text-sm font-mono">
+                      Competitive Findings
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-6 text-zinc-300 text-sm leading-relaxed">
+                  Public portfolio of 8 competitive smart contract audit
+                  findings from Cyfrin CodeHawks (SNARKeling Treasure Hunt First
+                  Flight). Reentrancy, access control, double-spend, logic
+                  errors - complete with Foundry PoCs and professional reports.
+                </p>
+                <div className="mt-8 flex items-center justify-between">
+                  <span className="px-5 py-2 bg-amber-950 text-amber-400 text-xs font-mono rounded-2xl border border-amber-400/30">
+                    CODEHAWKS • 8 FINDINGS
+                  </span>
+                  <a
+                    href="https://github.com/LightPat/Web3-Security-Findings"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-zinc-400 hover:text-white flex items-center gap-1"
+                  >
+                    VIEW REPORTS <span className="text-lg leading-none">→</span>
                   </a>
                 </div>
               </div>
